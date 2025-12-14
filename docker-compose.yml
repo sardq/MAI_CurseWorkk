@@ -1,0 +1,90 @@
+version: '3.8'
+services:
+  # 1. ИНФРАСТРУКТУРНЫЙ УРОВЕНЬ
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: analysis_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: analysis_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  # 2. СЕРВИСЫ АНАЛИЗА И ЗНАНИЙ
+  knowledge_service:
+    build: ./knowledge_service # Путь к вашему Dockerfile
+    container_name: knowledge_base_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8004
+    environment:
+      DB_HOST: postgres_db # Важно: имя сервиса БД
+      DB_USER: user
+      DB_PASS: password
+      DB_NAME: analysis_db
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  syntax_service:
+    build: ./syntax_service
+    container_name: syntax_analysis_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+      
+  logic_service:
+    build: ./logic_service
+    container_name: logic_analysis_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
+
+  style_service:
+    build: ./style_service
+    container_name: style_analysis_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+
+  # 3. ГЛАВНЫЙ СЕРВИС / ШЛЮЗ (API GATEWAY)
+  report_service:
+    build: ./report_service
+    container_name: analysis_gateway_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8080
+    environment:
+      # Настройки для подключения к БД
+      DB_HOST: postgres_db 
+      DB_USER: user
+      DB_PASS: password
+      DB_NAME: analysis_db
+      # Настройки для подключения к аналитическим сервисам (для report_service.src.main.py)
+      SYNTAX_URL: http://syntax_service:8001/analyze
+      LOGIC_URL: http://logic_service:8003/analyze
+      STYLE_URL: http://style_service:8002/analyze
+      KNOWLEDGE_URL: http://knowledge_service:8004/knowledge/lookup/
+    ports:
+      - "8080:8080" # Внешний порт для доступа к API Gateway
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      knowledge_service:
+        condition: service_started
+      syntax_service:
+        condition: service_started
+      logic_service:
+        condition: service_started
+      style_service:
+        condition: service_started
+
+volumes:
+  postgres_data:
