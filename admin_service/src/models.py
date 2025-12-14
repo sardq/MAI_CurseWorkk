@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class KnowledgeDB(Base):
     """Модель SQLAlchemy, соответствующая таблице knowledge_base_entry"""
-    tablename = "knowledge_base_entry"
+    __tablename__  = "knowledge_base_entry"
 
     id = Column(Integer, primary_key=True, index=True)
     pattern = Column(String(255), unique=True, index=True, nullable=False)

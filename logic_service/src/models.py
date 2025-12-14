@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class SourceCodeRequest(BaseModel):
-    """Модель входящего запроса с исходным кодом [cite: 45]"""
+    """Модель входящего запроса с исходным кодом"""
     code: str
     language: str = "python" 
 class AnalysisResult(BaseModel):

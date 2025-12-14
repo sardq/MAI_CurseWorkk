@@ -1,7 +1,7 @@
 import ast
 
 class LogicVisitor(ast.NodeVisitor):
-    def init(self):
+    def __init__(self):
         self.errors = []
         self.variables = {}  
 

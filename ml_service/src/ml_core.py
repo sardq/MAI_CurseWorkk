@@ -1,8 +1,9 @@
 import joblib
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import numpy as np
 import random
-from typing import Dict, List
+from typing import Optional, Dict, List
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -47,15 +48,14 @@ def train_and_save_model():
     X_padded = pad_sequences(sequences, maxlen=MAX_LEN)
     
     model = Sequential([
-        Embedding(len(tokenizer.word_index) + 1, EMBEDDING_DIM, input_length=MAX_LEN),
-        Conv1D(filters=32, kernel_size=3, activation='relu'),
-        GlobalMaxPooling1D(),
-        Dense(3, activation='softmax') 
-    ])
+    Embedding(len(tokenizer.word_index) + 1, EMBEDDING_DIM, input_length=MAX_LEN),
+    Conv1D(filters=16, kernel_size=3, activation='relu'),  
+    GlobalMaxPooling1D(),
+    Dense(3, activation='softmax')
+])
     
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    
-    model.fit(X_padded, y_train, epochs=10, verbose=0)
+    model.fit(X_padded, y_train, epochs=5, verbose=0)
 
     model.save('src/trained_model.h5')
     joblib.dump(tokenizer, 'src/tokenizer.pkl')
@@ -63,7 +63,7 @@ def train_and_save_model():
 
 
 class MLAnalyzer:
-    def init(self):
+    def __init__(self):
         self.model = None
         self.tokenizer = None
         self.LABEL_MAP = {0: "Style", 1: "Logic", 2: "Security"}

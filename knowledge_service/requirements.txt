@@ -3,3 +3,4 @@ uvicorn==0.21.1
 pydantic==1.10.7
 sqlalchemy[asyncio]==2.0.25      
 asyncpg==0.29.0                
+passlib[bcrypt]

@@ -6,9 +6,9 @@ from sqlalchemy.orm import declarative_base
 from src.models import Base 
 
 
-DB_USER = os.getenv("DB_USER", "user")
-DB_PASS = os.getenv("DB_PASS", "password")
-DB_HOST = os.getenv("DB_HOST", "postgres_db") 
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASS = os.getenv("DB_PASS", "")  
+DB_HOST = os.getenv("DB_HOST", "postgres_db")
 DB_NAME = os.getenv("DB_NAME", "analysis_db")
 DB_PORT = os.getenv("DB_PORT", "5432")
 

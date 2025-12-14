@@ -3,10 +3,11 @@ FROM python:3.9-slim
 WORKDIR /app
 
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
+
+ENV CUDA_VISIBLE_DEVICES="-1"
 
 RUN python -c "from src.ml_core import train_and_save_model; train_and_save_model()"
 

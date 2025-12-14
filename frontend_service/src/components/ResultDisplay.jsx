@@ -30,7 +30,7 @@ function ResultsDisplay({ report }) {
                 </thead>
                 <tbody>
                     {report.errors.map((error, index) => (
-                        <tr key={index} className={getSeverityClass}>
+                        <tr key={index} className={getSeverityClass(error.severity)}>
                             <td>{error.severity}</td>
                             <td>{error.error_type}</td>
                             <td>{error.line}:{error.column}</td>

@@ -9,7 +9,7 @@ Base = declarative_base()
 
 class AnalysisSessionDB(Base):
     """Таблица AnalysisSession: хранит метаданные о сессии анализа."""
-    tablename = "analysis_session"
+    __tablename__  = "analysis_session"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=True) 
     filename = Column(String(255))
@@ -22,7 +22,7 @@ class AnalysisSessionDB(Base):
 
 class ErrorDB(Base):
     """Таблица Error: хранит все найденные ошибки."""
-    tablename = "error"
+    __tablename__  = "error"
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey('analysis_session.id'), nullable=False)
     
@@ -52,12 +52,24 @@ class AnalysisResultFromService(BaseModel):
     suggestion: Optional[str] = None
 
 class FinalReportError(AnalysisResultFromService):
-    """Формат ошибки в финальном отчете"""
-    description: Optional[str] = None 
+    description: Optional[str] = None
+    ml_error_type: Optional[str] = None
+    ml_severity: Optional[str] = None
+    ml_correction: Optional[str] = None
+    ml_confidence: Optional[float] = None
     
+class ASTSummary(BaseModel):
+    total_nodes: int
+    node_types: dict
+    functions: int
+    classes: int
+    loops: int
+    conditions: int
 class FinalReportResponse(BaseModel):
     session_id: int
     status: str
     total_errors: int
     errors: List[FinalReportError]
     duration_ms: float
+    ast_summary: Optional[ASTSummary] = None
+

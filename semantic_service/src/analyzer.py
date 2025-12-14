@@ -3,9 +3,8 @@ import re
 from typing import List, Dict
 
 class SemanticVisitor(ast.NodeVisitor):
-    def init(self):
+    def __init__(self):
         self.errors = []
-
     def check_docstring(self, node):
         """Проверка наличия докстринга и его длины."""
         docstring = ast.get_docstring(node)

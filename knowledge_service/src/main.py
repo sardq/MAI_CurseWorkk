@@ -2,64 +2,94 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
+from passlib.context import CryptContext
+from typing import List
 from src.database import get_db_session, init_db
-from src.models import KnowledgeDB, KnowledgeBaseEntryCreate, LookupResult, KnowledgeBaseEntryResponse
+from src.models import (
+    UserDB, UserCreate, UserResponse,
+    KnowledgeDB, KnowledgeEntryUpdate, KnowledgeResponse
+)
 
-app = FastAPI(title="Knowledge Base Service (PostgreSQL)", version="3.0.0")
+app = FastAPI(title="Administration Service", version="1.0.0")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 @app.on_event("startup")
 async def startup_event():
-    """Выполняется при запуске: инициализация подключения и, возможно, таблиц."""
-    # В боевом режиме эту функцию лучше отключить и использовать миграции БД
-    # await init_db() 
+    # Создание таблиц User, KnowledgeBaseEntry и др. при запуске
+    # В боевом режиме эту функцию лучше отключить
+    await init_db() 
     pass
 
-# --- API Эндпоинты ---
 
-@app.post("/knowledge/add", response_model=KnowledgeBaseEntryResponse, status_code=status.HTTP_201_CREATED)
-async def add_knowledge_entry(
-    entry: KnowledgeBaseEntryCreate,
-    db: AsyncSession = Depends(get_db_session)
-):
-    """Добавляет новую запись в базу знаний."""
-    db_entry = KnowledgeDB(**entry.dict())
-    db.add(db_entry)
-    
+@app.post("/admin/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db_session)):
+    """Создание нового пользователя (например, администратора)"""
+    hashed_password = get_password_hash(user.password)
+    db_user = UserDB(
+        username=user.username,
+        hashed_password=hashed_password,
+        email=user.email,
+        role=user.role
+    )
+    db.add(db_user)
     try:
         await db.commit()
-        await db.refresh(db_entry)
-        return db_entry
+        await db.refresh(db_user)
+        return db_user
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Шаблон ошибки '{entry.pattern}' уже существует."
-        )
+        raise HTTPException(status_code=400, detail="Пользователь с таким именем или email уже существует.")
 
-@app.get("/knowledge/lookup/{error_pattern}", response_model=LookupResult)
-async def lookup_correction(
-    error_pattern: str,
+@app.get("/admin/users/", response_model=List[UserResponse])
+async def list_users(db: AsyncSession = Depends(get_db_session)):
+    """Получение списка всех пользователей системы."""
+    result = await db.execute(select(UserDB))
+    return result.scalars().all()
+
+
+@app.get("/admin/knowledge/", response_model=List[KnowledgeResponse])
+async def list_knowledge_entries(db: AsyncSession = Depends(get_db_session)):
+    result = await db.execute(select(KnowledgeDB).order_by(KnowledgeDB.id))
+    return result.scalars().all()
+
+@app.patch("/admin/knowledge/{entry_id}", response_model=KnowledgeResponse)
+async def update_knowledge_entry(
+    entry_id: int, 
+    update_data: KnowledgeEntryUpdate, 
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Возвращает рекомендацию и уровень серьезности по коду ошибки."""
-    
-    result = await db.execute(
-        select(KnowledgeDB).where(KnowledgeDB.pattern == error_pattern)
-    )
+    result = await db.execute(select(KnowledgeDB).where(KnowledgeDB.id == entry_id))
     entry = result.scalars().first()
     
     if not entry:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Шаблон ошибки '{error_pattern}' не найден в Базе Знаний."
-        )
+        raise HTTPException(status_code=404, detail="Запись не найдена.")
+
+    update_data_dict = update_data.dict(exclude_unset=True)
+    for key, value in update_data_dict.items():
+        setattr(entry, key, value)
+
+    await db.commit()
+    await db.refresh(entry)
+    return entry
+
+
+@app.delete("/admin/knowledge/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_knowledge_entry(entry_id: int, db: AsyncSession = Depends(get_db_session)):
+    """Удаление записи из Базы Знаний."""
+    result = await db.execute(select(KnowledgeDB).where(KnowledgeDB.id == entry_id))
+    entry = result.scalars().first()
+    
+    if not entry:
+        raise HTTPException(status_code=404, detail="Запись не найдена.")
         
-    return LookupResult(
-        correction=entry.correction,
-        description=entry.description,
-        severity_level=entry.severity_level
-    )
+    await db.delete(entry)
+    await db.commit()
+    return
 
 @app.get("/health")
 async def health_check():
-    return {"status": "active", "service": "KnowledgeService", "database_type": "PostgreSQL Async"}
+    return {"status": "active", "service": "AdminService"}

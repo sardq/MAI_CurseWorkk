@@ -9,12 +9,10 @@ app = FastAPI(title="Knowledge Base Service (PostgreSQL)", version="3.0.0")
 
 @app.on_event("startup")
 async def startup_event():
-    """Выполняется при запуске: инициализация подключения и, возможно, таблиц."""
     # В боевом режиме эту функцию лучше отключить и использовать миграции БД
     # await init_db() 
     pass
 
-# --- API Эндпоинты ---
 
 @app.post("/knowledge/add", response_model=KnowledgeBaseEntryResponse, status_code=status.HTTP_201_CREATED)
 async def add_knowledge_entry(

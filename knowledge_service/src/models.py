@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class UserDB(Base):
     """Модель SQLAlchemy для таблицы User"""
-    tablename = "user"
+    __tablename__  = "user"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False)
@@ -19,7 +19,7 @@ class UserDB(Base):
 
 class KnowledgeDB(Base):
     """Модель KnowledgeBaseEntry (должна быть идентична той, что в knowledge_service)"""
-    tablename = "knowledge_base_entry"
+    __tablename__  = "knowledge_base_entry"
 
     id = Column(Integer, primary_key=True, index=True)
     pattern = Column(String(255), unique=True, index=True, nullable=False)
@@ -51,3 +51,13 @@ class KnowledgeEntryUpdate(BaseModel):
     description: Optional[str] = None
     correction: Optional[str] = None
     severity_level: Optional[str] = None
+    
+class KnowledgeResponse(BaseModel):
+    id: int
+    pattern: str
+    description: str
+    correction: str
+    severity_level: str
+
+    class Config:
+        orm_mode = True

@@ -38,7 +38,7 @@ function AnalysisForm() {
 
         } catch (err) {
             console.error('Analysis failed:', err);
-            setError("Ошибка анализа: ${err.message}. Проверьте доступность бэкенда.");
+            setError(`Ошибка анализа: ${err.message}. Проверьте доступность бэкенда.`);
         } finally {
             setLoading(false);
         }
