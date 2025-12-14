@@ -95,6 +95,15 @@ services:
         condition: service_started
       ml_service:
         condition: service_started
+  frontend:
+    build:
+      context: ./frontend_service
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80"         
+    depends_on:
+      - report_service
 
 volumes:
   postgres_data:

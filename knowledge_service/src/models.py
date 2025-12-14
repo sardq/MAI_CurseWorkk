@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func, Boolean
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -14,7 +14,7 @@ class UserDB(Base):
     hashed_password = Column(String(100), nullable=False)
     email = Column(String(100), unique=True)
     role = Column(String(20), default="user") # 'admin', 'moderator', 'user'
-    is_active = Column(Integer, default=1)
+    is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, default=func.now())
 
 class KnowledgeDB(Base):

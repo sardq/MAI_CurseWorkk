@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from src.models import SourceCodeRequest, AnalysisResponse, AnalysisResult # Используем общие модели
-from src.semantic_analyzer import analyze_semantic
+from src.analyzer import analyze_semantic
 
 app = FastAPI(title="Semantic Analysis Service", version="1.0.0")
 

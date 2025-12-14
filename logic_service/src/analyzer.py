@@ -1,55 +1,91 @@
+# analyzer.py
 import ast
 
 class LogicVisitor(ast.NodeVisitor):
     def __init__(self):
         self.errors = []
-        self.variables = {}  
+        self.variables = {}  # {'var_name': {'defined': lineno, 'used': bool}}
 
     def visit_Assign(self, node):
-        """Отслеживание присваивания переменных"""
         for target in node.targets:
             if isinstance(target, ast.Name):
                 self.variables[target.id] = {'defined': node.lineno, 'used': False}
         self.generic_visit(node)
 
     def visit_Name(self, node):
-        """Отслеживание использования переменных"""
         if isinstance(node.ctx, ast.Load) and node.id in self.variables:
             self.variables[node.id]['used'] = True
         self.generic_visit(node)
 
     def visit_If(self, node):
-        """Поиск логических ошибок: if True / if False """
+        # Проверяем if True / if False
         if isinstance(node.test, ast.Constant):
             if node.test.value is True:
                 self.errors.append({
                     "line": node.lineno,
                     "col": node.col_offset,
-                    "msg": "Логическая ошибка: Условие 'if True' всегда выполняется.",
+                    "msg": "Логическая ошибка: условие всегда True",
                     "severity": "Warning",
-                    "suggestion": "Удалите проверку условия."
+                    "suggestion": "Удалите проверку условия"
                 })
             elif node.test.value is False:
                 self.errors.append({
                     "line": node.lineno,
                     "col": node.col_offset,
-                    "msg": "Логическая ошибка: Недостижимый код (if False).",
+                    "msg": "Логическая ошибка: недостижимый код (условие всегда False)",
                     "severity": "Critical",
-                    "suggestion": "Удалите данный блок кода."
+                    "suggestion": "Удалите данный блок кода"
                 })
+
+        # Проверяем простые бинарные выражения и логические комбинации
+        elif self.is_impossible_condition(node.test):
+            self.errors.append({
+                "line": node.lineno,
+                "col": node.col_offset,
+                "msg": "Логическая ошибка: условие всегда False",
+                "severity": "Critical",
+                "suggestion": "Проверьте условие"
+            })
+
         self.generic_visit(node)
 
+    def is_impossible_condition(self, node):
+        """Простейший анализ для выражений с константами"""
+        if isinstance(node, ast.Compare):
+            if all(isinstance(c, ast.Constant) for c in [node.left] + node.comparators):
+                left = node.left.value
+                right = node.comparators[0].value
+                op = node.ops[0]
+                if isinstance(op, ast.Gt) and left <= right:
+                    return True
+                if isinstance(op, ast.Lt) and left >= right:
+                    return True
+                if isinstance(op, ast.GtE) and left < right:
+                    return True
+                if isinstance(op, ast.LtE) and left > right:
+                    return True
+                if isinstance(op, ast.Eq) and left != right:
+                    return True
+                if isinstance(op, ast.NotEq) and left == right:
+                    return True
+
+        # Логические AND / OR
+        if isinstance(node, ast.BoolOp) and all(isinstance(v, ast.Compare) for v in node.values):
+            # если все подусловия False → условие False
+            return all(self.is_impossible_condition(v) for v in node.values)
+
+        return False
+
 def analyze_logic(code: str) -> list:
-    """Функция запуска анализа"""
     try:
         tree = ast.parse(code)
     except SyntaxError:
-        return [] 
+        return []
 
     visitor = LogicVisitor()
     visitor.visit(tree)
 
-    
+    # Проверяем неиспользуемые переменные
     for var_name, info in visitor.variables.items():
         if not info['used'] and not var_name.startswith('_'):
             visitor.errors.append({

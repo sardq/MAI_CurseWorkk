@@ -1,24 +1,23 @@
-
+/* Global Reset */
 *,
 *::before,
 *::after {
-  box-sizing: border-box; 
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-
 :root {
-  
   --primary-color: #007bff;
-  --secondary-color: #6c757d; 
-  --background-color: #f4f7f6; 
-  --text-color: #333;
+  --primary-hover: #0056b3;
+  --secondary-color: #6c757d;
+  --background-color: #f4f7f6;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --info-color: #17a2b8;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  
-  --severity-critical: #dc3545; 
-  --severity-warning: #ffc107;
-  --severity-info: #17a2b8; 
 }
 
 body {
@@ -27,58 +26,182 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   min-height: 100vh;
-  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
 }
 
-#root {
+/* App Container */
+.App {
+  width: 100%;
+  max-width: 500px;
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Titles */
+h1, h2, h3 {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Forms */
+form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
+  gap: 15px;
 }
 
-h1, h2, h3 {
-  margin-top: 0;
-  margin-bottom: 0.5em;
-  font-weight: 600;
+input {
+  padding: 12px 15px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-a {
-  color: var(--primary-color);
-  text-decoration: none;
+input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  outline: none;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-button, input[type="submit"], .analyze-button {
+/* Buttons */
+button {
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background-color: var(--primary-color);
+  transition: all 0.3s ease;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
+button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Secondary Buttons */
+button.secondary {
+  background-color: var(--secondary-color);
+}
+
+button.secondary:hover {
+  background-color: #495057;
+}
+
+/* Messages */
 .message {
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin-top: 15px;
-    font-weight: bold;
-    text-align: center;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 10px;
 }
 
 .error-message {
-    background-color: #f8d7da;
-    color: var(--severity-critical);
-    border: 1px solid #f5c6cb;
+  background-color: #f8d7da;
+  color: var(--error-color);
+  border: 1px solid #f5c6cb;
 }
 
 .success-message {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+  background-color: #d4edda;
+  color: var(--success-color);
+  border: 1px solid #c3e6cb;
 }
 
 .loading-message {
-    background-color: #d1ecf1;
-    color: var(--severity-info);
-    border: 1px solid #bee5eb;
+  background-color: #d1ecf1;
+  color: var(--info-color);
+  border: 1px solid #bee5eb;
+}
+
+/* Navigation */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+nav button {
+  background-color: var(--error-color);
+}
+
+nav button:hover {
+  background-color: #c82333;
+}
+
+/* Analysis Form */
+.analysis-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.code-input {
+  width: 100%;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
+.report-summary {
+  padding: 15px;
+  background-color: #f1f3f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.error-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.error-table th, .error-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.error-table th {
+  background-color: #e9ecef;
+}
+
+/* Severity Colors */
+.severity-critical {
+  background-color: #f8d7da;
+}
+.severity-warning {
+  background-color: #fff3cd;
+}
+.severity-info, .severity-recommendation {
+  background-color: #d1ecf1;
 }

@@ -19,8 +19,6 @@ def get_password_hash(password):
 
 @app.on_event("startup")
 async def startup_event():
-    # Создание таблиц User, KnowledgeBaseEntry и др. при запуске
-    # В боевом режиме эту функцию лучше отключить
     await init_db() 
     pass
 
