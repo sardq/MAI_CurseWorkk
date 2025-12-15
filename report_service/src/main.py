@@ -119,12 +119,15 @@ async def run_analysis_tasks(
 
     return all_errors, ast_summary
 
+# report_service/src/main.py
+
 @app.post("/api/v1/analyze_code", response_model=FinalReportResponse)
 async def analyze_and_report(
     request: SourceCodeRequest,
     db: AsyncSession = Depends(get_db_session),
     current_user: UserDB = Depends(get_current_user)
 ):
+    # ... (код создания сессии остается тем же) ...
     start_time_ms = time.time() * 1000
     
     session_db = AnalysisSessionDB(
@@ -132,75 +135,80 @@ async def analyze_and_report(
     filename=request.filename,
     status="PENDING"
     )
-
     db.add(session_db)
-    await db.commit()
-    await db.refresh(session_db)
-    
+    await db.flush()
     raw_errors, ast_summary = await run_analysis_tasks(request.code)
     
     final_errors: List[FinalReportError] = []
 
     async with httpx.AsyncClient(timeout=10.0) as client:
-        ML_CONFIDENCE_THRESHOLD = 0.65
+        ML_CONFIDENCE_THRESHOLD = 0.5
+        
         for error in raw_errors:
             report_error = FinalReportError(**error.dict())
+            
+            # --- 1. Попытка получить ответ от ML (этот кусок у вас уже есть) ---
             try:
                 ml_payload = {
                     "code_fragment": error.message,
                     "context_error_type": error.error_type
                 }
-
-                ml_response = await client.post(
-                    SERVICE_URLS["ml"],
-                    json=ml_payload
-                )
+                ml_response = await client.post(SERVICE_URLS["ml"], json=ml_payload)
                 ml_response.raise_for_status()
                 ml_data = ml_response.json()
-
                 ml_confidence = ml_data.get("confidence", 0.0)
 
-                # ML используется ТОЛЬКО если уверен
                 if ml_confidence >= ML_CONFIDENCE_THRESHOLD:
                     report_error.ml_error_type = ml_data.get("ml_error_type")
                     report_error.ml_severity = ml_data.get("ml_severity")
                     report_error.ml_correction = ml_data.get("ml_correction")
                     report_error.ml_confidence = ml_confidence
-
-                    # ML может усилить severity, но не ломает логику
-                    report_error.severity = ml_data.get(
-                        "ml_severity",
-                        report_error.severity
-                    )
+                    report_error.severity = ml_data.get("ml_severity", report_error.severity)
+                    
+                    # Если ML уверен, сразу используем его совет
+                    report_error.suggestion = report_error.ml_correction
+                    report_error.description = "Рекомендация сгенерирована ML-моделью"
                 else:
                     report_error.ml_confidence = ml_confidence
 
             except (httpx.HTTPStatusError, httpx.RequestError):
-                pass
+                pass # Игнорируем ошибки ML сервиса
 
-            if (
-                report_error.ml_correction
-                and report_error.ml_confidence
-                and report_error.ml_confidence >= ML_CONFIDENCE_THRESHOLD
-            ):
-                report_error.suggestion = report_error.ml_correction
-                report_error.description = "Рекомендация сгенерирована ML-моделью"
-            else:
+            # --- 2. ЛОГИКА БАЗЫ ЗНАНИЙ (ВСТАВЛЯТЬ СЮДА) ---
+            # Если ML не дал совета (или уверенность низкая), идем в Knowledge Service
+            if not ((report_error.ml_confidence or 0.0) < ML_CONFIDENCE_THRESHOLD):
                 try:
-                    error_pattern = f"{error.error_type}_{report_error.severity}"
-                    kb_response = await client.get(
-                        SERVICE_URLS["knowledge_lookup"] + error_pattern
+                    kb_payload = {
+                        "error_type": error.error_type,   # Например: "Syntax" или "SyntaxError"
+                        "error_message": error.message    # Например: "expected ':'"
+                    }
+                    
+                    # Делаем запрос к сервису знаний
+                    kb_response = await client.post(
+                        SERVICE_URLS["knowledge_lookup"], 
+                        json=kb_payload
                     )
-                    kb_response.raise_for_status()
-                    kb_data = kb_response.json()
-
-                    report_error.suggestion = kb_data.get("correction")
-                    report_error.description = kb_data.get("description")
+                    
+                    if kb_response.status_code == 200:
+                        kb_data = kb_response.json()
+                        # ПЕРЕЗАПИСЫВАЕМ скучное сообщение анализатора на полезное из БЗ
+                        report_error.suggestion = kb_data.get("correction")
+                        report_error.description = kb_data.get("description")
+                        
+                        if kb_data.get("severity_level"):
+                            report_error.severity = kb_data.get("severity_level")
+                    
+                    # Если БЗ ничего не нашла, оставляем то, что прислал анализатор (или ставим дефолт)
+                    elif not report_error.suggestion:
+                        report_error.description = "Рекомендация не найдена."
 
                 except (httpx.HTTPStatusError, httpx.RequestError):
-                    report_error.description = "Рекомендация отсутствует."
+                    # Если сервис упал, не ломаем отчет, оставляем данные анализатора
+                    pass
 
             final_errors.append(report_error)
+
+    # ... (дальше код сохранения в БД и возврата ответа остается тем же) ...
 
     for report_error in final_errors:
         error_db = ErrorDB(

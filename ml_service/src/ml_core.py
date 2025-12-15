@@ -1,117 +1,92 @@
+import re
 import joblib
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import numpy as np
-import random
-from typing import Optional, Dict, List
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from sklearn.metrics.pairwise import cosine_similarity
+import os
 
-# --- Параметры модели ---
-MAX_WORDS = 10000      # Максимальное количество слов (токенов) в словаре
-MAX_LEN = 50           # Максимальная длина последовательности (фрагмента кода)
-EMBEDDING_DIM = 16     # Размерность векторного представления
-
-# --- Имитация реальных данных для обучения ---
-def generate_code_data() -> (List[str], List[str]):
-    """Генерирует примеры кода и соответствующие метки ошибок."""
-    style_samples = [
-        "if a==b:print(c)", "def func( x , y):", "result =  1 + 2", 
-        "long_variable_name_one = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10"
-    ]
-    logic_samples = [
-        "if True == False:", "while (x > 10) and (x < 5):", "return x / 0",
-        "if 'a' in [1, 2, 3]:"
-    ]
-    security_samples = [
-        "import os; os.system(cmd)", "user_input = input(); eval(user_input)",
-        "db.execute(f'SELECT * FROM users WHERE name={user}')"
-    ]
-
-    X_train = style_samples + logic_samples + security_samples
-    # Метки: 0 - Style, 1 - Logic, 2 - Security
-    y_labels = [0] * len(style_samples) + [1] * len(logic_samples) + [2] * len(security_samples)
-    
-    return X_train, np.array(y_labels)
-
-def train_and_save_model():
-    """Обучает простую одномерную свёрточную нейронную сеть (Conv1D)."""
-    
-    X_train, y_train = generate_code_data()
-    
-    tokenizer = Tokenizer(num_words=MAX_WORDS, char_level=True, split='')
-    tokenizer.fit_on_texts(X_train)
-    
-    sequences = tokenizer.texts_to_sequences(X_train)
-    X_padded = pad_sequences(sequences, maxlen=MAX_LEN)
-    
-    model = Sequential([
-    Embedding(len(tokenizer.word_index) + 1, EMBEDDING_DIM, input_length=MAX_LEN),
-    Conv1D(filters=16, kernel_size=3, activation='relu'),  
-    GlobalMaxPooling1D(),
-    Dense(3, activation='softmax')
-])
-    
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(X_padded, y_train, epochs=5, verbose=0)
-
-    model.save('src/trained_model.h5')
-    joblib.dump(tokenizer, 'src/tokenizer.pkl')
-    print("Realistic ML model (Keras) trained and saved.")
-
+# Пути к файлам модели
+# Используем os.path, чтобы пути работали корректно независимо от точки запуска
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
+DB_PATH = os.path.join(BASE_DIR, "fix_database.pkl")
 
 class MLAnalyzer:
     def __init__(self):
-        self.model = None
-        self.tokenizer = None
-        self.LABEL_MAP = {0: "Style", 1: "Logic", 2: "Security"}
-        
-        if not os.path.exists('src/trained_model.h5'):
-            train_and_save_model() 
-            
-        try:
-            self.model = load_model('src/trained_model.h5')
-            self.tokenizer = joblib.load('src/tokenizer.pkl')
-        except Exception as e:
-            print(f"Ошибка загрузки ML-модели: {e}")
-            raise RuntimeError("ML model failed to load.")
+        self.vectorizer = None
+        self.db = None
+        self.db_vectors = None
+        self.load_model()
 
-    def predict(self, code_fragment: str, context: Optional[str] = None) -> Dict:
-        """Предсказывает тип ошибки и генерирует рекомендацию."""
-        
-        sequences = self.tokenizer.texts_to_sequences([code_fragment])
-        X_test = pad_sequences(sequences, maxlen=MAX_LEN)
-        
-        predictions = self.model.predict(X_test)[0]
-        predicted_class_index = np.argmax(predictions)
-        confidence = predictions[predicted_class_index]
-        
-        predicted_label = self.LABEL_MAP.get(predicted_class_index, "Unknown")
-        
-        if predicted_label == "Logic":
-            correction = "Модель предсказала логическую ошибку. Проверьте условия выхода из циклов."
-            severity = "Critical"
-            ml_type = "ML: Logical Ambiguity"
-        elif predicted_label == "Style":
-            correction = "Модель предсказала стилевую проблему. Улучшите форматирование (PEP 8)."
-            severity = "Info"
-            ml_type = "ML: Style Deviation"
-        elif predicted_label == "Security":
-            correction = "Модель обнаружила потенциальную уязвимость (SQL Injection/RCE). НЕМЕДЛЕННО ИСПРАВЬТЕ!"
-            severity = "Critical"
-            ml_type = "ML: Vulnerability"
+    def load_model(self):
+        """Загружает модель и базу данных в память."""
+        if os.path.exists(VECTORIZER_PATH) and os.path.exists(DB_PATH):
+            self.vectorizer = joblib.load(VECTORIZER_PATH)
+            self.db = joblib.load(DB_PATH)
+            # Векторизуем базу сразу при загрузке, чтобы не делать это каждый раз при запросе
+            self.db_vectors = self.vectorizer.transform(self.db["buggy_code"])
+            print("✅ ML Model loaded into memory.")
         else:
-            correction = "Модель не смогла классифицировать фрагмент кода."
-            severity = "Unknown"
-            ml_type = "ML: Unclassified"
-            
+            print("⚠️ Model files not found. Please run train_model.py first.")
+
+    def reload_model(self):
+        """Перезагружает модель (используется после дообучения)."""
+        print("Reloading model...")
+        self.load_model()
+
+    def preprocess_query(self, code: str) -> str:
+        """Очищает запрос пользователя от мусора, чтобы повысить точность."""
+        if not code:
+            return ""
+        # Заменяем переносы строк на пробелы
+        code = code.replace('\n', ' ')
+        # Удаляем лишние пробелы (два и более подряд)
+        code = re.sub(r'\s+', ' ', code).strip()
+        return code
+
+    def predict(self, code_fragment: str, context: str = None) -> dict:
+        """
+        Основной метод: принимает код, находит похожий баг и возвращает решение.
+        """
+        if self.vectorizer is None or self.db is None:
+            return {
+                "ml_error_type": "ML_Error",
+                "ml_severity": "Info",
+                "ml_correction": "Model not loaded",
+                "confidence": 0.0
+            }
+
+        # 1. Очищаем запрос (важный шаг для повышения уверенности!)
+        clean_code = self.preprocess_query(code_fragment)
+        
+        # 2. Векторизуем запрос
+        try:
+            query_vec = self.vectorizer.transform([clean_code])
+        except ValueError:
+            # Если запрос пустой или содержит недопустимые символы
+            return {
+                "ml_error_type": "ML_Unknown",
+                "ml_severity": "Info",
+                "ml_correction": "",
+                "confidence": 0.0
+            }
+
+        # 3. Считаем сходство (Cosine Similarity)
+        similarities = cosine_similarity(query_vec, self.db_vectors).flatten()
+        
+        # 4. Находим лучший результат
+        best_idx = np.argmax(similarities)
+        confidence = float(similarities[best_idx])
+        
+        # Получаем строку из базы данных (DataFrame)
+        row = self.db.iloc[best_idx]
+
+        # 5. Возвращаем результат
         return {
-            "ml_error_type": ml_type,
-            "ml_severity": severity,
-            "ml_correction": correction,
-            "confidence": float(confidence)
+            "ml_error_type": "ML_Suggestion", # Можно брать из контекста или базы
+            "ml_severity": "Warning" if confidence > 0.8 else "Info",
+            "ml_correction": row["commit_message"],
+            "confidence": confidence
         }
 
+# Создаем экземпляр анализатора
 ml_analyzer = MLAnalyzer()

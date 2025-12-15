@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from typing import List
 from src.database import get_db_session, init_db
 from src.models import (
-    UserDB, UserCreate, UserResponse,
+    LookupRequest, UserDB, UserCreate, UserResponse,
     KnowledgeDB, KnowledgeEntryUpdate, KnowledgeResponse
 )
 
@@ -74,6 +74,36 @@ async def update_knowledge_entry(
     await db.refresh(entry)
     return entry
 
+@app.post("/knowledge/lookup/", response_model=KnowledgeResponse)
+async def lookup_knowledge(
+    request: LookupRequest, 
+    db: AsyncSession = Depends(get_db_session)
+):
+    # 1. Ищем все записи для данного типа ошибки (например, "Syntax")
+    # Используем ilike для нечувствительности к регистру
+    query = select(KnowledgeDB).where(KnowledgeDB.error_type.ilike(request.error_type))
+    result = await db.execute(query)
+    entries = result.scalars().all()
+    
+    if not entries:
+        raise HTTPException(status_code=404, detail="No entries for this error type")
+
+    best_match = None
+    
+    # 2. Ищем совпадение по ключевому слову в сообщении ошибки
+    for entry in entries:
+        # Если есть паттерн и он содержится в сообщении ошибки
+        if entry.keyword_pattern and entry.keyword_pattern.lower() in request.error_message.lower():
+            return entry
+        
+        # Запоминаем "общий" совет (где паттерн пустой), на случай если точного не найдем
+        if not entry.keyword_pattern or entry.keyword_pattern == "":
+            best_match = entry
+            
+    if best_match:
+        return best_match
+        
+    raise HTTPException(status_code=404, detail="Specific recommendation not found")
 
 @app.delete("/admin/knowledge/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_knowledge_entry(entry_id: int, db: AsyncSession = Depends(get_db_session)):

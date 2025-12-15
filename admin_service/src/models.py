@@ -40,3 +40,12 @@ class KnowledgeBaseEntryResponse(KnowledgeBaseEntryCreate):
     
     class Config:
         orm_mode = True 
+class KnowledgeResponse(BaseModel):
+    id: int
+    pattern: str
+    description: str
+    correction: str
+    severity_level: str
+
+    class Config:
+        orm_mode = True

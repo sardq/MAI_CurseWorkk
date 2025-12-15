@@ -18,14 +18,15 @@ class UserDB(Base):
     created_at = Column(TIMESTAMP, default=func.now())
 
 class KnowledgeDB(Base):
-    """Модель KnowledgeBaseEntry (должна быть идентична той, что в knowledge_service)"""
     __tablename__  = "knowledge_base_entry"
 
     id = Column(Integer, primary_key=True, index=True)
-    pattern = Column(String(255), unique=True, index=True, nullable=False)
+    error_type = Column(String(100), index=True, nullable=False) 
+    keyword_pattern = Column(String(255), nullable=True) 
+    
     description = Column(Text, nullable=False)
     correction = Column(Text, nullable=False)
-    severity_level = Column(String(50), nullable=False)
+    severity_level = Column(String(50), nullable=False) # Critical, Warning, Info
 
 
 class UserCreate(BaseModel):
@@ -61,3 +62,7 @@ class KnowledgeResponse(BaseModel):
 
     class Config:
         orm_mode = True
+        
+class LookupRequest(BaseModel):
+    error_type: str
+    error_message: str

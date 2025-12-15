@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
+from src.models import KnowledgeResponse
 from src.database import get_db_session, init_db
 from src.models import KnowledgeDB, KnowledgeBaseEntryCreate, LookupResult, KnowledgeBaseEntryResponse
 
@@ -34,29 +35,36 @@ async def add_knowledge_entry(
             detail=f"Шаблон ошибки '{entry.pattern}' уже существует."
         )
 
-@app.get("/knowledge/lookup/{error_pattern}", response_model=LookupResult)
-async def lookup_correction(
-    error_pattern: str,
+app.post("/knowledge/lookup/", response_model=KnowledgeResponse)
+async def lookup_knowledge(
+    error_type: str, 
+    error_message: str, 
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Возвращает рекомендацию и уровень серьезности по коду ошибки."""
+    """
+    Ищет рекомендацию. Сначала по точному типу, затем фильтрует по вхождению паттерна в сообщение.
+    """
+    # 1. Ищем все записи с таким типом ошибки
+    query = select(KnowledgeDB).where(KnowledgeDB.error_type == error_type)
+    result = await db.execute(query)
+    entries = result.scalars().all()
     
-    result = await db.execute(
-        select(KnowledgeDB).where(KnowledgeDB.pattern == error_pattern)
-    )
-    entry = result.scalars().first()
+    # 2. Фильтрация на уровне Python (простейшая "ассоциативность")
+    # Пытаемся найти запись, чей keyword_pattern содержится в тексте ошибки
+    best_match = None
     
-    if not entry:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Шаблон ошибки '{error_pattern}' не найден в Базе Знаний."
-        )
+    for entry in entries:
+        if entry.keyword_pattern and entry.keyword_pattern.lower() in error_message.lower():
+            return entry # Нашли специфичный совет
         
-    return LookupResult(
-        correction=entry.correction,
-        description=entry.description,
-        severity_level=entry.severity_level
-    )
+        # Сохраним "общий" совет (где паттерн пустой) на случай, если специфичный не найдем
+        if not entry.keyword_pattern:
+            best_match = entry
+            
+    if best_match:
+        return best_match
+        
+    raise HTTPException(status_code=404, detail="Recommendation not found")
 
 @app.get("/health")
 async def health_check():

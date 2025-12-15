@@ -9,6 +9,6 @@ COPY src/ ./src/
 
 ENV CUDA_VISIBLE_DEVICES="-1"
 
-RUN python -c "from src.ml_core import train_and_save_model; train_and_save_model()"
+RUN python src/train_model.py
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8005"]
