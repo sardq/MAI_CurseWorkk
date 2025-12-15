@@ -52,6 +52,17 @@ export default function AnalysisForm() {
         <textarea
           value={code}
           onChange={e => setCode(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const start = e.target.selectionStart;
+              const end = e.target.selectionEnd;
+              setCode(code.substring(0, start) + '\t' + code.substring(end));
+              setTimeout(() => {
+                e.target.selectionStart = e.target.selectionEnd = start + 1;
+              }, 0);
+            }
+          }}
           rows="15"
           cols="80"
         />

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "http://report_service:8008/api/v1/sessions";
+const API_URL = "http://localhost:8008/api/v1/sessions";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState([]);

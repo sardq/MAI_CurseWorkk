@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "http://report_service:8004/admin/users/";
+const API_URL = "http://localhost:8004/admin/users/";
 
 export default function AdminPage() {
   const [users, setUsers] = useState([]);

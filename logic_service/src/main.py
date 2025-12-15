@@ -2,7 +2,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from analyzer import analyze_logic
+
+from src.analyzer import analyze_logic
 
 class SourceCodeRequest(BaseModel):
     code: str

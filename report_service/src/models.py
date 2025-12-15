@@ -17,7 +17,8 @@ class UserDB(Base):
     username = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-
+    email = Column(String(100), unique=True)
+    role = Column(String(50), default="user")
     # связь с AnalysisSessionDB
     sessions = relationship("AnalysisSessionDB", back_populates="user")
 

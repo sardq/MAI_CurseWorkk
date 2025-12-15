@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from src.init_admin import create_default_admin
 from src.database import get_db_session, init_db 
 from src.auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
@@ -17,6 +18,7 @@ from src.models import (
 )
 from typing import List, Optional, Tuple, Dict
 from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(title="Analysis Gateway and Report Service", version="1.0.0")
 
@@ -37,6 +39,8 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     await init_db()
+    async for db in get_db_session():
+        await create_default_admin(db)
     
 SERVICE_URLS = {
     "syntax": "http://syntax_service:8001/analyze",
@@ -138,6 +142,7 @@ async def analyze_and_report(
     final_errors: List[FinalReportError] = []
 
     async with httpx.AsyncClient(timeout=10.0) as client:
+        ML_CONFIDENCE_THRESHOLD = 0.65
         for error in raw_errors:
             report_error = FinalReportError(**error.dict())
             try:
@@ -145,6 +150,7 @@ async def analyze_and_report(
                     "code_fragment": error.message,
                     "context_error_type": error.error_type
                 }
+
                 ml_response = await client.post(
                     SERVICE_URLS["ml"],
                     json=ml_payload
@@ -152,31 +158,47 @@ async def analyze_and_report(
                 ml_response.raise_for_status()
                 ml_data = ml_response.json()
 
-                report_error.ml_error_type = ml_data.get("ml_error_type")
-                report_error.ml_severity = ml_data.get("ml_severity")
-                report_error.ml_correction = ml_data.get("ml_correction")
-                report_error.ml_confidence = ml_data.get("confidence")
+                ml_confidence = ml_data.get("confidence", 0.0)
 
-                report_error.severity = ml_data.get("ml_severity", report_error.severity)
+                # ML используется ТОЛЬКО если уверен
+                if ml_confidence >= ML_CONFIDENCE_THRESHOLD:
+                    report_error.ml_error_type = ml_data.get("ml_error_type")
+                    report_error.ml_severity = ml_data.get("ml_severity")
+                    report_error.ml_correction = ml_data.get("ml_correction")
+                    report_error.ml_confidence = ml_confidence
+
+                    # ML может усилить severity, но не ломает логику
+                    report_error.severity = ml_data.get(
+                        "ml_severity",
+                        report_error.severity
+                    )
+                else:
+                    report_error.ml_confidence = ml_confidence
 
             except (httpx.HTTPStatusError, httpx.RequestError):
                 pass
 
-            try:
-                error_pattern = f"{error.error_type}_{report_error.severity}"
-                kb_response = await client.get(
-                    SERVICE_URLS["knowledge_lookup"] + error_pattern
-                )
-                kb_response.raise_for_status()
-                kb_data = kb_response.json()
+            if (
+                report_error.ml_correction
+                and report_error.ml_confidence
+                and report_error.ml_confidence >= ML_CONFIDENCE_THRESHOLD
+            ):
+                report_error.suggestion = report_error.ml_correction
+                report_error.description = "Рекомендация сгенерирована ML-моделью"
+            else:
+                try:
+                    error_pattern = f"{error.error_type}_{report_error.severity}"
+                    kb_response = await client.get(
+                        SERVICE_URLS["knowledge_lookup"] + error_pattern
+                    )
+                    kb_response.raise_for_status()
+                    kb_data = kb_response.json()
 
-                report_error.suggestion = kb_data.get(
-                    "correction", report_error.ml_correction
-                )
-                report_error.description = kb_data.get("description")
+                    report_error.suggestion = kb_data.get("correction")
+                    report_error.description = kb_data.get("description")
 
-            except (httpx.HTTPStatusError, httpx.RequestError):
-                report_error.description = "Нет готового шаблона в Базе Знаний."
+                except (httpx.HTTPStatusError, httpx.RequestError):
+                    report_error.description = "Рекомендация отсутствует."
 
             final_errors.append(report_error)
 

@@ -74,6 +74,9 @@ services:
       DB_PASS: postgres       
       DB_NAME: analysis_db
       DB_PORT: 5432
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      ADMIN_EMAIL: admin@admin.admin
 
       SYNTAX_URL: http://syntax_service:8001/analyze
       LOGIC_URL: http://logic_service:8003/analyze
