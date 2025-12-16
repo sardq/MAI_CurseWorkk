@@ -6,9 +6,6 @@ from typing import List, Optional
 Base = declarative_base()
 
 
-# ------------------------------
-# SQLAlchemy модели
-# ------------------------------
 
 class UserDB(Base):
     __tablename__ = "user"
@@ -19,7 +16,6 @@ class UserDB(Base):
     is_active = Column(Boolean, default=True)
     email = Column(String(100), unique=True)
     role = Column(String(50), default="user")
-    # связь с AnalysisSessionDB
     sessions = relationship("AnalysisSessionDB", back_populates="user")
 
 
@@ -34,7 +30,6 @@ class AnalysisSessionDB(Base):
     status = Column(String(50))
     error_count = Column(Integer, default=0)
 
-    # связи
     user = relationship("UserDB", back_populates="sessions")
     errors = relationship("ErrorDB", back_populates="session")
 
@@ -53,10 +48,6 @@ class ErrorDB(Base):
 
     session = relationship("AnalysisSessionDB", back_populates="errors")
 
-
-# ------------------------------
-# Pydantic модели
-# ------------------------------
 
 class SourceCodeRequest(BaseModel):
     code: str

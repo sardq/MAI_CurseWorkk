@@ -1,10 +1,9 @@
-# analyzer.py
 import ast
 
 class LogicVisitor(ast.NodeVisitor):
     def __init__(self):
         self.errors = []
-        self.variables = {}  # {'var_name': {'defined': lineno, 'used': bool}}
+        self.variables = {}  
 
     def visit_Assign(self, node):
         for target in node.targets:
@@ -18,7 +17,6 @@ class LogicVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_If(self, node):
-        # Проверяем if True / if False
         if isinstance(node.test, ast.Constant):
             if node.test.value is True:
                 self.errors.append({
@@ -37,7 +35,6 @@ class LogicVisitor(ast.NodeVisitor):
                     "suggestion": "Удалите данный блок кода"
                 })
 
-        # Проверяем простые бинарные выражения и логические комбинации
         elif self.is_impossible_condition(node.test):
             self.errors.append({
                 "line": node.lineno,
@@ -69,9 +66,7 @@ class LogicVisitor(ast.NodeVisitor):
                 if isinstance(op, ast.NotEq) and left == right:
                     return True
 
-        # Логические AND / OR
         if isinstance(node, ast.BoolOp) and all(isinstance(v, ast.Compare) for v in node.values):
-            # если все подусловия False → условие False
             return all(self.is_impossible_condition(v) for v in node.values)
 
         return False
@@ -85,7 +80,6 @@ def analyze_logic(code: str) -> list:
     visitor = LogicVisitor()
     visitor.visit(tree)
 
-    # Проверяем неиспользуемые переменные
     for var_name, info in visitor.variables.items():
         if not info['used'] and not var_name.startswith('_'):
             visitor.errors.append({

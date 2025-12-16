@@ -10,18 +10,13 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@system.local")
 
 
 async def create_default_admin(db: AsyncSession):
-    """
-    Создаёт администратора при первом запуске приложения,
-    если он ещё не существует.
-    """
-
     result = await db.execute(
         select(UserDB).where(UserDB.username == ADMIN_USERNAME)
     )
     admin = result.scalar()
 
     if admin:
-        return  # Администратор уже существует
+        return  
 
     admin_user = UserDB(
         username=ADMIN_USERNAME,

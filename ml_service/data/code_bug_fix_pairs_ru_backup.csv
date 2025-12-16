@@ -1,0 +1,306 @@
+id,buggy_code,fixed_code,commit_message,commit_url,date
+1,x = x + 1,"x = 0
+x = x + 1",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+2,y += 2,"y = 0
+y += 2",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+3,print z,"z = 10
+print(z)",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+4,total = total + price,"total = 0
+total = total + price",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+5,result = a + b,"a = 1
+b = 2
+result = a + b",Переменные не определены перед использованием,https://github.com/example/merged,2025-01-01
+6,x = 5 / 0,x = 5 / 1,Исправлено деление на ноль (ZeroDivisionError),https://github.com/example/merged,2025-01-01
+7,"lst = [1,2,3]
+print(lst[5])","lst = [1,2,3]
+if len(lst) > 5:
+    print(lst[5])",Исправлен выход за пределы списка (IndexError),https://github.com/example/merged,2025-01-01
+8,"my_dict = {'a':1}
+print(my_dict['b'])","my_dict = {'a':1}
+print(my_dict.get('b'))",Исправлен доступ к отсутствующему ключу (KeyError),https://github.com/example/merged,2025-01-01
+9,x = '5' + 3,x = int('5') + 3,Исправлен тип данных для сложения (TypeError),https://github.com/example/merged,2025-01-01
+10,"val = None
+val.upper()","val = None
+if val:
+    val.upper()",Добавлена проверка None перед вызовом метода (AttributeError),https://github.com/example/merged,2025-01-01
+11,"def func()
+    pass","def func():
+    pass",Пропущено двоеточие в объявлении функции (SyntaxError),https://github.com/example/merged,2025-01-01
+12,"if x == 10
+    print(x)","if x == 10:
+    print(x)",Пропущено двоеточие в условии (SyntaxError),https://github.com/example/merged,2025-01-01
+13,"for i in range(5)
+    print(i)","for i in range(5):
+    print(i)",Пропущено двоеточие в цикле (SyntaxError),https://github.com/example/merged,2025-01-01
+14,"class MyClass
+    pass","class MyClass:
+    pass",Пропущено двоеточие в объявлении класса (SyntaxError),https://github.com/example/merged,2025-01-01
+15,if x = 5:,if x == 5:,"Использовать '==' для сравнения, не '=' (SyntaxError)",https://github.com/example/merged,2025-01-01
+16,while True print('Hi'),"while True:
+    print('Hi')",Пропущен перенос строки или двоеточие (SyntaxError),https://github.com/example/merged,2025-01-01
+17,"def greet(name):
+print(f'Hello {name}')","def greet(name):
+    print(f'Hello {name}')",Ошибка отступа (IndentationError),https://github.com/example/merged,2025-01-01
+18,"x = [1,2,3]
+ for i in x:
+    print(i)","x = [1,2,3]
+for i in x:
+    print(i)",Исправлен лишний отступ (IndentationError),https://github.com/example/merged,2025-01-01
+19,if a > 0 or a < 10: print('ok'),"if 0 < a < 10:
+    print('ok')",Исправлена логическая ошибка в условии,https://github.com/example/merged,2025-01-01
+20,"lst = [1,2,3]
+for i in lst
+    print(i)","lst = [1,2,3]
+for i in lst:
+    print(i)",Пропущено двоеточие в цикле (SyntaxError),https://github.com/example/merged,2025-01-01
+21,"my_list = [1,2,3]
+my_list.append(4)","my_list = []
+my_list.append(4)","Исправлена переменная, возможно неопределена",https://github.com/example/merged,2025-01-01
+22,"x = 10
+y = x + z","z = 5
+x = 10
+y = x + z",Исправлена неопределённая переменная z,https://github.com/example/merged,2025-01-01
+23,"dict = {'a':1}
+dict['b'] = 2","my_dict = {'a':1}
+my_dict['b'] = 2",Не использовать встроенное имя dict,https://github.com/example/merged,2025-01-01
+24,"sum = 0
+sum += value","total = 0
+total += value",Не использовать встроенное имя sum,https://github.com/example/merged,2025-01-01
+25,x=1+2,x = 1 + 2,Добавлены пробелы вокруг операторов,https://github.com/example/merged,2025-01-01
+26,"l=[1,2,3]","l = [1, 2, 3]",Добавлены пробелы после запятых,https://github.com/example/merged,2025-01-01
+27,if is_active = True:,if is_active:,Исправлено сравнение с True,https://github.com/example/merged,2025-01-01
+28,if is_ready = False:,if not is_ready:,Исправлено сравнение с False,https://github.com/example/merged,2025-01-01
+29,print 'Hello',print('Hello'),Использование функции print с скобками,https://github.com/example/merged,2025-01-01
+30,"import os, sys","import os
+import sys",Импорты на отдельных строках,https://github.com/example/merged,2025-01-01
+31,"x = (1,2)","x = (1,2)",Закрыта круглая скобка,https://github.com/example/merged,2025-01-01
+32,"y = [1,2]","y = [1,2]",Закрыта квадратная скобка,https://github.com/example/merged,2025-01-01
+33,"d = {'a':1,'b':2}","d = {'a':1,'b':2}",Закрыта фигурная скобка,https://github.com/example/merged,2025-01-01
+34,x = x+1,"x = 0
+x = x+1",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+35,count = count,"count = 0
+count = count",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+36,value = value+1,"value = 0
+value = value+1",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+37,user_id = user_id+1,"user_id = 0
+user_id = user_id+1",Исправлена неопределённая переменная (NameError),https://github.com/example/merged,2025-01-01
+38,str = 'text',text_str = 'text',Не использовать встроенное имя str,https://github.com/example/merged,2025-01-01
+39,elif data < 5,elif data < 5:,Пропущено двоеточие после elif,https://github.com/example/merged,2025-01-01
+40,for user_id in range(len(data)),for user_id in range(len(data)): ,Пропущено двоеточие в цикле for,https://github.com/example/merged,2025-01-01
+41,while user_id < 100,while user_id < 100:,Пропущено двоеточие в цикле while,https://github.com/example/merged,2025-01-01
+42,print value,print(value),В Python 3 для print требуются скобки,https://github.com/example/merged,2025-01-01
+43,print y,print(y),В Python 3 для print требуются скобки,https://github.com/example/merged,2025-01-01
+44,import non_existing_module,import os  # пример существующего модуля,Модуль не найден (ModuleNotFoundError),https://github.com/example/merged,2025-01-01
+45,"item = '10'
+y = item + 5","item = '10'
+y = int(item) + 5",Ошибка типов (TypeError),https://github.com/example/merged,2025-01-01
+46,"y = '10'
+y = y + 5","y = '10'
+y = int(y) + 5",Ошибка типов (TypeError),https://github.com/example/merged,2025-01-01
+47,"data = '10'
+y = data + 5","data = '10'
+y = int(data) + 5",Ошибка типов (TypeError),https://github.com/example/merged,2025-01-01
+48,"x = [1,2]
+x[2] = 5","x = [1,2]
+if len(x) > 2:
+    x[2] = 5",Индекс выходит за пределы списка (IndexError),https://github.com/example/merged,2025-01-01
+49,"d = {'a':1}
+print(d['b'])","d = {'a':1}
+print(d.get('b'))",Исправлен доступ к отсутствующему ключу (KeyError),https://github.com/example/merged,2025-01-01
+50,"val = None
+val.strip()","val = None
+if val:
+    val.strip()",Попытка вызвать метод у None (AttributeError),https://github.com/example/merged,2025-01-01
+51,invalid syntax,Syntax Corrected,"Синтаксическая ошибка. Проверьте конструкцию (if, for, def) и скобки.",https://github.com/example/repo/commit/dummy,2025-01-01
+52,expected ':',:,"Пропущено двоеточие в конце строки (if, def, class, while).",https://github.com/example/repo/commit/dummy,2025-01-01
+53,unexpected indent,pass,Ошибка отступа. Уберите лишние пробелы в начале строки.,https://github.com/example/repo/commit/dummy,2025-01-01
+54,expected an indented block,    pass,Ожидается блок с отступом. Добавьте 4 пробела после двоеточия.,https://github.com/example/repo/commit/dummy,2025-01-01
+55,name is not defined,var = 1,Переменная не объявлена. Проверьте опечатки в названии.,https://github.com/example/repo/commit/dummy,2025-01-01
+56,list index out of range,if len(lst) > i:,Индекс выходит за пределы списка. Проверьте длину массива.,https://github.com/example/repo/commit/dummy,2025-01-01
+57,unsupported operand type(s),str(a) + b,Ошибка типов. Нельзя складывать число и строку без преобразования.,https://github.com/example/repo/commit/dummy,2025-01-01
+58,eol while scanning string literal,'text',Строка не закрыта. Добавьте кавычку в конце.,https://github.com/example/repo/commit/dummy,2025-01-01
+59,module not found,pip install pkg,Модуль не найден. Установите его или проверьте имя импорта.,https://github.com/example/repo/commit/dummy,2025-01-01
+60,def my_func(),def my_func():,Пропущено двоеточие в объявлении функции.,https://github.com/example/repo/commit/dummy,2025-01-01
+61,if x == 10,if x == 10:,Пропущено двоеточие в условии if.,https://github.com/example/repo/commit/dummy,2025-01-01
+62,while True,while True:,Пропущено двоеточие в цикле while.,https://github.com/example/repo/commit/dummy,2025-01-01
+63,for i in items,for i in items:,Пропущено двоеточие в цикле for.,https://github.com/example/repo/commit/dummy,2025-01-01
+64,class MyClass,class MyClass:,Пропущено двоеточие в объявлении класса.,https://github.com/example/repo/commit/dummy,2025-01-01
+65,if x = y:,if x == y:,Синтаксическая ошибка: присваивание внутри условия.,https://github.com/example/repo/commit/dummy,2025-01-01
+66,"x = (1, 2","x = (1, 2)",Не закрыта круглая скобка.,https://github.com/example/repo/commit/dummy,2025-01-01
+67,"y = [1, 2","y = [1, 2]",Не закрыта квадратная скобка.,https://github.com/example/repo/commit/dummy,2025-01-01
+68,d = {'a': 1,d = {'a': 1},Не закрыта фигурная скобка словаря.,https://github.com/example/repo/commit/dummy,2025-01-01
+69,import pandas as,import pandas as pd,Ошибка импорта: не указан алиас после as.,https://github.com/example/repo/commit/dummy,2025-01-01
+70,from math import,from math import sqrt,"Ошибка импорта: не указано, что импортировать.",https://github.com/example/repo/commit/dummy,2025-01-01
+71,"def add_item(item, l=[])","def add_item(item, l=None)",Изменяемый аргумент по умолчанию. Используйте None.,https://github.com/example/repo/commit/dummy,2025-01-01
+72,if x > 0 or x < 10:,if 0 < x < 10:,Логическая ошибка в условии (всегда True). Используйте 0 < x < 10.,https://github.com/example/repo/commit/dummy,2025-01-01
+73,for i in list:,for i in my_list:,"Не используйте 'list' как имя переменной, это встроенный тип.",https://github.com/example/repo/commit/dummy,2025-01-01
+74,sum = 0,total_sum = 0,Не перекрывайте встроенную функцию 'sum'.,https://github.com/example/repo/commit/dummy,2025-01-01
+75,if x is 10:,if x == 10:,"Используйте '==' для сравнения чисел, 'is' — для проверки идентичности объектов.",https://github.com/example/repo/commit/dummy,2025-01-01
+76,file = open('f.txt'),with open('f.txt') as f:,Используйте контекстный менеджер 'with' для работы с файлами.,https://github.com/example/repo/commit/dummy,2025-01-01
+77,"try:
+    pass
+except:","try:
+    pass
+except Exception:",Не используйте 'bare except'. Указывайте конкретный тип исключения.,https://github.com/example/repo/commit/dummy,2025-01-01
+78,if variable == True:,if variable:,Не сравнивайте с True напрямую. Используйте 'if variable:'.,https://github.com/example/repo/commit/dummy,2025-01-01
+79,if variable == False:,if not variable:,Не сравнивайте с False напрямую. Используйте 'if not variable:'.,https://github.com/example/repo/commit/dummy,2025-01-01
+80,def MyFunction():,def my_function():,Названия функций должны быть в snake_case (pep8).,https://github.com/example/repo/commit/dummy,2025-01-01
+81,x=1,x = 1,Добавьте пробелы вокруг оператора присваивания.,https://github.com/example/repo/commit/dummy,2025-01-01
+82,"def func( a, b ):","def func(a, b):",Лишние пробелы внутри скобок.,https://github.com/example/repo/commit/dummy,2025-01-01
+83,"import sys, os","import sys
+import os",Импорты должны быть на отдельных строках.,https://github.com/example/repo/commit/dummy,2025-01-01
+84,"l = [1,2,3]","l = [1, 2, 3]",Добавьте пробелы после запятых.,https://github.com/example/repo/commit/dummy,2025-01-01
+85,"def calculate_sum(a, b)","def calculate_sum(a, b):",Пропущено двоеточие в функции.,https://github.com/example/repo/commit/dummy,2025-01-01
+86,def process_data(data),def process_data(data):,Пропущено двоеточие в функции.,https://github.com/example/repo/commit/dummy,2025-01-01
+87,if count = 0:,if count == 0:,Используйте '==' для сравнения.,https://github.com/example/repo/commit/dummy,2025-01-01
+88,if status = 'active':,if status == 'active':,Используйте '==' для сравнения.,https://github.com/example/repo/commit/dummy,2025-01-01
+89,while running,while running:,Пропущено двоеточие в цикле.,https://github.com/example/repo/commit/dummy,2025-01-01
+90,for item in collection,for item in collection:,Пропущено двоеточие в цикле.,https://github.com/example/repo/commit/dummy,2025-01-01
+91,list = [],my_list = [],Переменная 'list' перекрывает встроенный тип.,https://github.com/example/repo/commit/dummy,2025-01-01
+92,"def get_value(key, d={})","def get_value(key, d=None)",Изменяемый аргумент по умолчанию.,https://github.com/example/repo/commit/dummy,2025-01-01
+93,indentationerror,pass,"Ошибка отступов. Проверьте, что используете одинаковые отступы (лучше 4 пробела).",https://github.com/example/repo,2025-01-01
+94,"def calculate(a, b)","def calculate(a, b):",Пропущено двоеточие в объявлении функции.,https://github.com/example/repo,2025-01-01
+95,if count > 5,if count > 5:,Пропущено двоеточие в условии if.,https://github.com/example/repo,2025-01-01
+96,else,else:,Пропущено двоеточие после else.,https://github.com/example/repo,2025-01-01
+97,elif x < 5,elif x < 5:,Пропущено двоеточие после elif.,https://github.com/example/repo,2025-01-01
+98,for i in range(5),for i in range(5):,Пропущено двоеточие в цикле for.,https://github.com/example/repo,2025-01-01
+99,for i in range(10),for i in range(10):,Пропущено двоеточие в цикле for.,https://github.com/example/repo,2025-01-01
+100,for x in range(len(data)),for x in range(len(data)):,Пропущено двоеточие в цикле for.,https://github.com/example/repo,2025-01-01
+101,for user in users,for user in users:,Пропущено двоеточие в цикле for.,https://github.com/example/repo,2025-01-01
+102,"for i, item in enumerate(items)","for i, item in enumerate(items):",Пропущено двоеточие в цикле for.,https://github.com/example/repo,2025-01-01
+103,while x < 100,while x < 100:,Пропущено двоеточие в цикле while.,https://github.com/example/repo,2025-01-01
+104,print x,print(x),В Python 3 для print требуются скобки.,https://github.com/example/repo,2025-01-01
+105,def func(l=[]),def func(l=None),Опасно использовать изменяемый объект (список) как аргумент по умолчанию. Используйте None.,https://github.com/example/repo,2025-01-01
+106,class myClass:,class MyClass:,Названия классов принято писать в CapWords (с Большой Буквы).,https://github.com/example/repo,2025-01-01
+107,"print 'Hello, world!'","print('Hello, world!')",В Python 3 print — это функция. Обязательно используйте скобки.,https://github.com/example/manual-add,2025-01-01
+108,"x = 10
+if x > 5
+    print('x is greater than 5')","x = 10
+if x > 5:
+    print('x is greater than 5')",Пропущено двоеточие в конце условия if.,https://github.com/example/manual-add,2025-01-01
+109,"for i in range(5)
+    print(i)","for i in range(5):
+    print(i)",Пропущено двоеточие в конце цикла for.,https://github.com/example/manual-add,2025-01-01
+110,"if y = 7:
+    print('y is seven')","if y == 7:
+    print('y is seven')",Синтаксическая ошибка: нельзя использовать присваивание '=' в условии. Используйте сравнение '=='.,https://github.com/example/manual-add,2025-01-01
+111,"def greet(name):
+print(f'Hello {name}')","def greet(name):
+    print(f'Hello {name}')",Ошибка отступа (IndentationError). Тело функции должно быть смещено вправо.,https://github.com/example/manual-add,2025-01-01
+112,print(undeclared_variable),"undeclared_variable = 'test'
+print(undeclared_variable)",Переменная не объявлена (NameError). Проверьте название переменной или объявите её.,https://github.com/example/manual-add,2025-01-01
+113,"def add(a, b)
+    return a + b","def add(a, b):
+    return a + b",Пропущено двоеточие в объявлении функции.,https://github.com/example/manual-add,2025-01-01
+114,result = 10 / 0,"try:
+    result = 10 / 0
+except ZeroDivisionError:
+    result = 0",Деление на ноль невозможно (ZeroDivisionError). Добавьте проверку делителя.,https://github.com/example/manual-add,2025-01-01
+115,"lst = [1, 2, 3]
+print(lst[5])","lst = [1, 2, 3]
+if len(lst) > 5:
+    print(lst[5])",Индекс выходит за пределы списка (IndexError).,https://github.com/example/manual-add,2025-01-01
+116,"d = {'a': 1, 'b': 2}
+print(d['c'])","d = {'a': 1, 'b': 2}
+print(d.get('c'))",Ключ не найден в словаре (KeyError). Используйте метод .get() для безопасного доступа.,https://github.com/example/manual-add,2025-01-01
+117,numbers = [1 2 3 4],"numbers = [1, 2, 3, 4]",Синтаксическая ошибка. Элементы списка должны быть разделены запятыми.,https://github.com/example/manual-add,2025-01-01
+118,"for i in range(5,):
+    print(i)","for i in range(5):
+    print(i)",Странный синтаксис range. Уберите лишнюю запятую.,https://github.com/example/manual-add,2025-01-01
+119,s = Hello World,s = 'Hello World',Синтаксическая ошибка. Строковые литералы должны быть заключены в кавычки.,https://github.com/example/manual-add,2025-01-01
+120,"x = '10'
+y = x + 5","x = '10'
+y = int(x) + 5",Ошибка типов (TypeError). Нельзя складывать строку и число без преобразования.,https://github.com/example/manual-add,2025-01-01
+121,"value = None
+value.upper()","value = None
+if value:
+    value.upper()",Попытка вызвать метод у объекта NoneType (AttributeError). Добавьте проверку на None.,https://github.com/example/manual-add,2025-01-01
+122,my_dict = {'a': 1 'b': 2},"my_dict = {'a': 1, 'b': 2}",Синтаксическая ошибка в словаре. Элементы должны разделяться запятой.,https://github.com/example/manual-add,2025-01-01
+123,squares = [x**2 for x in range(5) if],squares = [x**2 for x in range(5) if x > 0],Синтаксическая ошибка в List Comprehension. Условие if не закончено.,https://github.com/example/manual-add,2025-01-01
+124,class = 10,my_class = 10,Синтаксическая ошибка. 'class' является зарезервированным словом и не может быть именем переменной.,https://github.com/example/manual-add,2025-01-01
+125,"count = 0
+while count < 5
+    print(count)
+    count += 1","count = 0
+while count < 5:
+    print(count)
+    count += 1",Пропущено двоеточие в конце условия while.,https://github.com/example/manual-add,2025-01-01
+126,invalid syntauser_id,Syntauser_id Corrected,"Синтаксическая ошибка. Проверьте конструкцию (if, for, def) и скобки.",https://github.com/example/merged,2025-01-01
+127,invalid syntavalue,Syntavalue Corrected,"Синтаксическая ошибка. Проверьте конструкцию (if, for, def) и скобки.",https://github.com/example/merged,2025-01-01
+128,invalid syntacount,Syntacount Corrected,"Синтаксическая ошибка. Проверьте конструкцию (if, for, def) и скобки.",https://github.com/example/merged,2025-01-01
+129,euser_idpected ':',:,"Пропущено двоеточие в конце строки (if, def, class, while).",https://github.com/example/merged,2025-01-01
+130,evaluepected ':',:,"Пропущено двоеточие в конце строки (if, def, class, while).",https://github.com/example/merged,2025-01-01
+131,eypected ':',:,"Пропущено двоеточие в конце строки (if, def, class, while).",https://github.com/example/merged,2025-01-01
+132,unedatapected indent,pass,Ошибка отступа. Уберите лишние пробелы в начале строки.,https://github.com/example/merged,2025-01-01
+133,uneuser_idpected indent,pass,Ошибка отступа. Уберите лишние пробелы в начале строки.,https://github.com/example/merged,2025-01-01
+134,uneypected indent,pass,Ошибка отступа. Уберите лишние пробелы в начале строки.,https://github.com/example/merged,2025-01-01
+135,ecountpected an indented block,    pass,Ожидается блок с отступом. Добавьте 4 пробела после двоеточия.,https://github.com/example/merged,2025-01-01
+136,eindexpected an indented block,    pass,Ожидается блок с отступом. Добавьте 4 пробела после двоеточия.,https://github.com/example/merged,2025-01-01
+137,eypected an indented block,    pass,Ожидается блок с отступом. Добавьте 4 пробела после двоеточия.,https://github.com/example/merged,2025-01-01
+138,data indedata out of range,if len(lst) > i:,Индекс выходит за пределы списка. Проверьте длину массива.,https://github.com/example/merged,2025-01-01
+139,value indevalue out of range,if len(lst) > i:,Индекс выходит за пределы списка. Проверьте длину массива.,https://github.com/example/merged,2025-01-01
+140,y indey out of range,if len(lst) > i:,Индекс выходит за пределы списка. Проверьте длину массива.,https://github.com/example/merged,2025-01-01
+141,if y == 10,if y == 10:,Пропущено двоеточие в условии if.,https://github.com/example/merged,2025-01-01
+142,if value == 10,if value == 10:,Пропущено двоеточие в условии if.,https://github.com/example/merged,2025-01-01
+143,if user_id == 10,if user_id == 10:,Пропущено двоеточие в условии if.,https://github.com/example/merged,2025-01-01
+144,if value = 5:,if value == 5:,"Ошибка условия: используйте '==' для сравнения, а не '='.",https://github.com/example/merged,2025-01-01
+145,if data = 5:,if data == 5:,"Ошибка условия: используйте '==' для сравнения, а не '='.",https://github.com/example/merged,2025-01-01
+146,if count = 5:,if count == 5:,"Ошибка условия: используйте '==' для сравнения, а не '='.",https://github.com/example/merged,2025-01-01
+147,if data = y:,if data == y:,Синтаксическая ошибка: присваивание внутри условия.,https://github.com/example/merged,2025-01-01
+148,if value = y:,if value == y:,Синтаксическая ошибка: присваивание внутри условия.,https://github.com/example/merged,2025-01-01
+149,if index = y:,if index == y:,Синтаксическая ошибка: присваивание внутри условия.,https://github.com/example/merged,2025-01-01
+150,"value = (1, 2","value = (1, 2)",Не закрыта круглая скобка.,https://github.com/example/merged,2025-01-01
+151,"user_id = (1, 2","user_id = (1, 2)",Не закрыта круглая скобка.,https://github.com/example/merged,2025-01-01
+152,"index = (1, 2","index = (1, 2)",Не закрыта круглая скобка.,https://github.com/example/merged,2025-01-01
+153,if index > 0 or index < 10:,if 0 < index < 10:,Логическая ошибка в условии (всегда True). Используйте 0 < x < 10.,https://github.com/example/merged,2025-01-01
+154,if value > 0 or value < 10:,if 0 < value < 10:,Логическая ошибка в условии (всегда True). Используйте 0 < x < 10.,https://github.com/example/merged,2025-01-01
+155,if item > 0 or item < 10:,if 0 < item < 10:,Логическая ошибка в условии (всегда True). Используйте 0 < x < 10.,https://github.com/example/merged,2025-01-01
+156,for i in value:,for i in my_value:,"Не используйте 'list' как имя переменной, это встроенный тип.",https://github.com/example/merged,2025-01-01
+157,for i in item:,for i in my_item:,"Не используйте 'list' как имя переменной, это встроенный тип.",https://github.com/example/merged,2025-01-01
+158,for i in count:,for i in my_count:,"Не используйте 'list' как имя переменной, это встроенный тип.",https://github.com/example/merged,2025-01-01
+159,if y is 10:,if y == 10:,"Используйте '==' для сравнения чисел, 'is' — для проверки идентичности объектов.",https://github.com/example/merged,2025-01-01
+160,if index is 10:,if index == 10:,"Используйте '==' для сравнения чисел, 'is' — для проверки идентичности объектов.",https://github.com/example/merged,2025-01-01
+161,file = open('f.tcountt'),with open('f.tcountt') as f:,Используйте контекстный менеджер 'with' для работы с файлами.,https://github.com/example/merged,2025-01-01
+162,file = open('f.tuser_idt'),with open('f.tuser_idt') as f:,Используйте контекстный менеджер 'with' для работы с файлами.,https://github.com/example/merged,2025-01-01
+163,file = open('f.tdatat'),with open('f.tdatat') as f:,Используйте контекстный менеджер 'with' для работы с файлами.,https://github.com/example/merged,2025-01-01
+164,"try:
+    pass
+eycept:","try:
+    pass
+eycept Eyception:",Не используйте 'bare except'. Указывайте конкретный тип исключения.,https://github.com/example/merged,2025-01-01
+165,"try:
+    pass
+ecountcept:","try:
+    pass
+ecountcept Ecountception:",Не используйте 'bare except'. Указывайте конкретный тип исключения.,https://github.com/example/merged,2025-01-01
+166,"try:
+    pass
+edatacept:","try:
+    pass
+edatacept Edataception:",Не используйте 'bare except'. Указывайте конкретный тип исключения.,https://github.com/example/merged,2025-01-01
+167,value=1,value = 1,Добавьте пробелы вокруг оператора присваивания.,https://github.com/example/merged,2025-01-01
+168,item=1,item = 1,Добавьте пробелы вокруг оператора присваивания.,https://github.com/example/merged,2025-01-01
+169,count=1,count = 1,Добавьте пробелы вокруг оператора присваивания.,https://github.com/example/merged,2025-01-01
+170,count = count+1,count += 1,Используйте оператор += для инкремента.,https://github.com/example/merged,2025-01-01
+171,user_id = [],my_user_id = [],Переменная 'list' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+172,y = [],my_y = [],Переменная 'list' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+173,count = [],my_count = [],Переменная 'list' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+174,str = 'teitemt',teitemt_str = 'teitemt',Переменная 'str' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+175,str = 'tevaluet',tevaluet_str = 'tevaluet',Переменная 'str' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+176,str = 'tedatat',tedatat_str = 'tedatat',Переменная 'str' перекрывает встроенный тип.,https://github.com/example/merged,2025-01-01
+177,elif user_id < 5,elif user_id < 5:,Пропущено двоеточие после elif.,https://github.com/example/merged,2025-01-01
+178,elif index < 5,elif index < 5:,Пропущено двоеточие после elif.,https://github.com/example/merged,2025-01-01
+179,for item in range(len(data)),for item in range(len(data)):,Пропущено двоеточие в цикле for.,https://github.com/example/merged,2025-01-01
+180,while data < 100,while data < 100:,Пропущено двоеточие в цикле while.,https://github.com/example/merged,2025-01-01
+181,print data,print(data),В Python 3 для print требуются скобки.,https://github.com/example/merged,2025-01-01
+182,import non_evalueisting_module,import os  # пример существующего модуля,Модуль не найден (ModuleNotFoundError). Проверьте имя модуля или установите его через pip.,https://github.com/example/merged,2025-01-01
+183,import non_euser_idisting_module,import os  # пример существующего модуля,Модуль не найден (ModuleNotFoundError). Проверьте имя модуля или установите его через pip.,https://github.com/example/merged,2025-01-01
+184,"item = '10'
+y = item + 5","item = '10'
+y = int(item) + 5",Ошибка типов (TypeError). Нельзя складывать строку и число без преобразования.,https://github.com/example/merged,2025-01-01
+185,"y = '10'
+y = y + 5","y = '10'
+y = int(y) + 5",Ошибка типов (TypeError). Нельзя складывать строку и число без преобразования.,https://github.com/example/merged,2025-01-01
+186,"data = '10'
+y = data + 5","data = '10'
+y = int(data) + 5",Ошибка типов (TypeError). Нельзя складывать строку и число без преобразования.,https://github.com/example/merged,2025-01-01

@@ -1,7 +1,9 @@
 fastapi
 uvicorn
-pydantic
 pandas
-numpy
 scikit-learn
 joblib
+python-multipart
+httpx
+transformers
+apscheduler

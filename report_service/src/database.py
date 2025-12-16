@@ -30,19 +30,10 @@ AsyncSessionLocal = sessionmaker(
 
 
 async def init_db():
-    """
-    Создает таблицы в базе данных на основе моделей, если они не существуют.
-    Используется только для первого запуска или тестирования.
-    В боевой среде для этого обычно используется Alembic.
-    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_db_session():
-    """
-    Функция-генератор, используемая как зависимость (Dependency Injection) в FastAPI.
-    Обеспечивает создание, использование и корректное закрытие сессии БД.
-    """
     async with AsyncSessionLocal() as session:
         try:
             yield session

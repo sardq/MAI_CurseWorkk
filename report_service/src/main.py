@@ -25,7 +25,7 @@ app = FastAPI(title="Analysis Gateway and Report Service", version="1.0.0")
 # Разрешаем запросы с фронтенда
 origins = [
     "http://localhost",
-    "http://localhost:80",
+    "http://localhost:8080",
     "http://localhost:5173",  # если используешь Vite dev-сервер
 ]
 
@@ -127,63 +127,100 @@ async def analyze_and_report(
     db: AsyncSession = Depends(get_db_session),
     current_user: UserDB = Depends(get_current_user)
 ):
-    # ... (код создания сессии остается тем же) ...
     start_time_ms = time.time() * 1000
     
+    # 1. Создаем сессию анализа в БД (статус PENDING)
     session_db = AnalysisSessionDB(
-    user_id=current_user.id,
-    filename=request.filename,
-    status="PENDING"
+        user_id=current_user.id,
+        filename=request.filename,
+        status="PENDING"
     )
     db.add(session_db)
     await db.flush()
+
+    # 2. Разбиваем код на строки, чтобы доставать фрагменты для ML
+    source_lines = request.code.splitlines()
+
+    # 3. Запускаем анализаторы (Syntax, Logic, Style)
     raw_errors, ast_summary = await run_analysis_tasks(request.code)
     
     final_errors: List[FinalReportError] = []
 
+    # 4. Обрабатываем каждую ошибку через ML и Базу Знаний
     async with httpx.AsyncClient(timeout=10.0) as client:
-        ML_CONFIDENCE_THRESHOLD = 0.5
+        # Порог уверенности ML (если выше - верим ML, если ниже - ищем в БЗ)
+        ML_CONFIDENCE_THRESHOLD = 0.70 
         
         for error in raw_errors:
             report_error = FinalReportError(**error.dict())
             
-            # --- 1. Попытка получить ответ от ML (этот кусок у вас уже есть) ---
+            # --- ПОДГОТОВКА ДАННЫХ ДЛЯ ML ---
+            # По умолчанию берем текст ошибки
+            code_fragment_to_analyze = error.message 
+            if error.line is not None and error.line > 0 and error.line <= len(source_lines):
+                target_line_idx = error.line - 1
+                
+                start_idx = max(0, target_line_idx - 1) # -1 строка (контекст сверху)
+                end_idx = min(len(source_lines), target_line_idx + 2) # +1 строка (контекст снизу)
+                
+                context_lines = source_lines[start_idx:end_idx]
+                actual_code_snippet = "\n".join(context_lines)
+
+                if actual_code_snippet.strip():
+                    code_fragment_to_analyze = actual_code_snippet
+            # Если есть номер строки, пытаемся взять САМ КОД (x = x+1), а не описание ошибки
+            if error.line is not None and error.line > 0 and error.line <= len(source_lines):
+                actual_code_line = source_lines[error.line - 1].strip()
+                # Если строка не пустая, отправляем её в ML
+                if actual_code_line:
+                    code_fragment_to_analyze = actual_code_line
+
+            # --- ШАГ 1: ML SERVICE ---
             try:
                 ml_payload = {
-                    "code_fragment": error.message,
-                    "context_error_type": error.error_type
+                    "code_fragment": str(code_fragment_to_analyze or ""),
+                    "context_error_type": str(error.error_type or "")
                 }
+                print(f"Sending to ML: {ml_payload}") 
+
                 ml_response = await client.post(SERVICE_URLS["ml"], json=ml_payload)
+                
+                # Если ML вернул 422, выведем подробности ошибки валидации
+                if ml_response.status_code == 422:
+                    print(f"ML Validation Error: {ml_response.text}")
+                
                 ml_response.raise_for_status()
                 ml_data = ml_response.json()
+                
                 ml_confidence = ml_data.get("confidence", 0.0)
+                report_error.ml_confidence = ml_confidence
 
+                # Если ML достаточно уверен
                 if ml_confidence >= ML_CONFIDENCE_THRESHOLD:
                     report_error.ml_error_type = ml_data.get("ml_error_type")
                     report_error.ml_severity = ml_data.get("ml_severity")
                     report_error.ml_correction = ml_data.get("ml_correction")
-                    report_error.ml_confidence = ml_confidence
-                    report_error.severity = ml_data.get("ml_severity", report_error.severity)
                     
-                    # Если ML уверен, сразу используем его совет
+                    # Применяем рекомендацию от ML
                     report_error.suggestion = report_error.ml_correction
                     report_error.description = "Рекомендация сгенерирована ML-моделью"
-                else:
-                    report_error.ml_confidence = ml_confidence
+                    
+                    # Если ML считает ошибку критичной, обновляем severity
+                    if ml_data.get("ml_severity"):
+                        report_error.severity = ml_data.get("ml_severity")
 
-            except (httpx.HTTPStatusError, httpx.RequestError):
-                pass # Игнорируем ошибки ML сервиса
+            except (httpx.HTTPStatusError, httpx.RequestError) as e:
+                print(f"ML Service unavailable: {e}")
 
-            # --- 2. ЛОГИКА БАЗЫ ЗНАНИЙ (ВСТАВЛЯТЬ СЮДА) ---
-            # Если ML не дал совета (или уверенность низкая), идем в Knowledge Service
-            if not ((report_error.ml_confidence or 0.0) < ML_CONFIDENCE_THRESHOLD):
+            # --- ШАГ 2: БАЗА ЗНАНИЙ (KNOWLEDGE BASE) ---
+            # Заходим сюда, только если ML не дал уверенного ответа
+            if (report_error.ml_confidence or 0.0) < ML_CONFIDENCE_THRESHOLD:
                 try:
                     kb_payload = {
-                        "error_type": error.error_type,   # Например: "Syntax" или "SyntaxError"
-                        "error_message": error.message    # Например: "expected ':'"
+                        "error_type": error.error_type,
+                        "error_message": error.message # В БЗ ищем по тексту ошибки!
                     }
                     
-                    # Делаем запрос к сервису знаний
                     kb_response = await client.post(
                         SERVICE_URLS["knowledge_lookup"], 
                         json=kb_payload
@@ -191,25 +228,29 @@ async def analyze_and_report(
                     
                     if kb_response.status_code == 200:
                         kb_data = kb_response.json()
-                        # ПЕРЕЗАПИСЫВАЕМ скучное сообщение анализатора на полезное из БЗ
                         report_error.suggestion = kb_data.get("correction")
                         report_error.description = kb_data.get("description")
                         
                         if kb_data.get("severity_level"):
                             report_error.severity = kb_data.get("severity_level")
                     
-                    # Если БЗ ничего не нашла, оставляем то, что прислал анализатор (или ставим дефолт)
                     elif not report_error.suggestion:
                         report_error.description = "Рекомендация не найдена."
 
                 except (httpx.HTTPStatusError, httpx.RequestError):
-                    # Если сервис упал, не ломаем отчет, оставляем данные анализатора
                     pass
+            
+            # --- ШАГ 3: ФИНАЛЬНАЯ КОРРЕКТИРОВКА SERIOUSNESS ---
+            # Жестко задаем уровни, чтобы "Стиль" не был "Критическим"
+            if error.error_type == "Style":
+                 report_error.severity = "Warning"
+            
+            if error.error_type == "Syntax":
+                 report_error.severity = "Critical"
 
             final_errors.append(report_error)
 
-    # ... (дальше код сохранения в БД и возврата ответа остается тем же) ...
-
+    # 5. Сохраняем ошибки в БД
     for report_error in final_errors:
         error_db = ErrorDB(
             session_id=session_db.id,
@@ -222,6 +263,7 @@ async def analyze_and_report(
         )
         db.add(error_db)
         
+    # 6. Обновляем статус сессии
     session_db.error_count = len(final_errors)
     session_db.end_time = datetime.datetime.now()
     session_db.status = "COMPLETED"
@@ -232,13 +274,13 @@ async def analyze_and_report(
     duration_ms = end_time_ms - start_time_ms
 
     return FinalReportResponse(
-    session_id=session_db.id,
-    status=session_db.status,
-    total_errors=len(final_errors),
-    errors=final_errors,
-    duration_ms=round(duration_ms, 2),
-    ast_summary=ast_summary
-)
+        session_id=session_db.id,
+        status=session_db.status,
+        total_errors=len(final_errors),
+        errors=final_errors,
+        duration_ms=round(duration_ms, 2),
+        ast_summary=ast_summary
+    )
 @app.get(
     "/api/v1/sessions",
     response_model=List[SessionSummaryResponse]

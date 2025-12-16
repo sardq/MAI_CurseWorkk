@@ -4,7 +4,6 @@ import tempfile
 from typing import List, Dict
 
 class CustomReport(pycodestyle.StandardReport):
-    """Класс-перехватчик для сбора результатов анализа стиля в структуру данных."""
     def get_file_results(self) -> List[Dict]:
         self._deferred_print.sort()
         results = []
