@@ -6,7 +6,6 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 class UserDB(Base):
-    """Модель SQLAlchemy для таблицы User"""
     __tablename__  = "user"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -66,3 +65,8 @@ class KnowledgeResponse(BaseModel):
 class LookupRequest(BaseModel):
     error_type: str
     error_message: str
+
+class MLFeedbackRequest(BaseModel):
+    buggy_code: str
+    fixed_code: str
+    commit_message: str

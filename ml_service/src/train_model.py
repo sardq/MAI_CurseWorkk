@@ -1,3 +1,4 @@
+import csv
 import pandas as pd
 import joblib
 import os
@@ -14,7 +15,7 @@ def train():
         print("CSV file not found.")
         return
 
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH, engine='python', quotechar = '"', quoting=csv.QUOTE_ALL, on_bad_lines='error', skipinitialspace=True)
     df = df.dropna(subset=["buggy_code"])
     
     df["train_text"] = df["buggy_code"].str.strip()

@@ -1,22 +1,20 @@
 from pydantic import BaseModel
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func
+from sqlalchemy import Boolean, Column, Integer, String, Text, TIMESTAMP, func
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 class KnowledgeDB(Base):
-    """Модель SQLAlchemy, соответствующая таблице knowledge_base_entry"""
     __tablename__  = "knowledge_base_entry"
 
     id = Column(Integer, primary_key=True, index=True)
-    pattern = Column(String(255), unique=True, index=True, nullable=False)
+    error_type = Column(String(100), index=True, nullable=False) 
+    keyword_pattern = Column(String(255), nullable=True) 
+    
     description = Column(Text, nullable=False)
     correction = Column(Text, nullable=False)
-    language = Column(String(50), default="python")
     severity_level = Column(String(50), nullable=False)
-    source_service = Column(String(100))
-    created_at = Column(TIMESTAMP, default=func.now())
 
 class KnowledgeBaseEntryCreate(BaseModel):
     """Модель для создания новой записи через API"""
@@ -49,3 +47,48 @@ class KnowledgeResponse(BaseModel):
 
     class Config:
         orm_mode = True
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    role: str = "user" 
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: Optional[str]
+    role: str
+    is_active: bool
+
+    class Config:
+        orm_mode = True
+
+class KnowledgeCreate(BaseModel):
+    error_type: str
+    keyword_pattern: Optional[str] = ""
+    description: str
+    correction: str
+    severity_level: str = "Warning"
+
+class KnowledgeUpdate(BaseModel):
+    error_type: Optional[str] = None
+    keyword_pattern: Optional[str] = None
+    description: Optional[str] = None
+    correction: Optional[str] = None
+    severity_level: Optional[str] = None
+
+class KnowledgeResponse(KnowledgeCreate):
+    id: int
+
+    class Config:
+        orm_mode = True
+class UserDB(Base):
+    __tablename__  = "user"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False)
+    hashed_password = Column(String(100), nullable=False)
+    email = Column(String(100), unique=True)
+    role = Column(String(20), default="user") # 'admin', 'moderator', 'user'
+    is_active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP, default=func.now())

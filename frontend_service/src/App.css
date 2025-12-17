@@ -21,7 +21,6 @@ body {
   margin-bottom: 20px;
 }
 
-/* Стили формы */
 .analysis-form {
   display: flex;
   flex-direction: column;
@@ -99,11 +98,11 @@ body {
 }
 
 .severity-critical {
-  background-color: #f8d7da; /* Light red */
+  background-color: #f8d7da; 
 }
 .severity-warning {
-  background-color: #fff3cd; /* Light yellow */
+  background-color: #fff3cd; 
 }
 .severity-info, .severity-recommendation {
-  background-color: #d1ecf1; /* Light cyan */
+  background-color: #d1ecf1; 
 }

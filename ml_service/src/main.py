@@ -6,9 +6,22 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.models import CodeFragmentRequest, FeedbackRequest, MLPredictionResponse
 from src.ml_core import ml_analyzer
 from src.train_model import train, DATA_PATH
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="ML Analysis Service", version="1.0.0")
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:5173",  
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 scheduler = AsyncIOScheduler()
 
 IS_TRAINING = False
@@ -31,7 +44,7 @@ async def run_training_task():
 
 @app.on_event("startup")
 async def startup_event():
-    scheduler.add_job(run_training_task, 'interval', hours=2)
+    scheduler.add_job(lambda: asyncio.create_task(run_training_task()), 'interval', hours=2)
     scheduler.start()
 
 @app.on_event("shutdown")
@@ -41,8 +54,17 @@ async def shutdown_event():
 
 @app.post("/train/feedback")
 async def feedback_loop(data: FeedbackRequest):
-    new_data = pd.DataFrame([[data.buggy_code, data.fixed_code, data.commit_message]], 
-                            columns=["buggy_code", "fixed_code", "commit_message"])
+    columns = ["id", "buggy_code", "fixed_code", "commit_message", "commit_url", "date", "buggy_code_clean"]
+
+    new_data = pd.DataFrame([{
+        "id": None,  
+        "buggy_code": data.buggy_code,
+        "fixed_code": data.fixed_code,
+        "commit_message": data.commit_message,
+        "commit_url": "",      
+        "date": "",            
+        "buggy_code_clean": "" 
+    }])
     
     header = not os.path.exists(DATA_PATH)
     new_data.to_csv(DATA_PATH, mode='a', header=header, index=False)

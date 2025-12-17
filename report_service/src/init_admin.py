@@ -4,29 +4,48 @@ from sqlalchemy import select
 from src.models import UserDB
 from src.auth import hash_password
 
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@system.local")
+
+DEFAULT_USERS = [
+    {
+        "username": os.getenv("ADMIN_USERNAME", "admin"),
+        "password": os.getenv("ADMIN_PASSWORD", "admin123"),
+        "email": os.getenv("ADMIN_EMAIL", "admin@system.local"),
+        "role": "admin",
+    },
+    {
+        "username": os.getenv("OPERATOR_USERNAME", "operator"),
+        "password": os.getenv("OPERATOR_PASSWORD", "operator123"),
+        "email": os.getenv("OPERATOR_EMAIL", "operator@system.local"),
+        "role": "operator",
+    },
+    {
+        "username": os.getenv("USER_USERNAME", "user"),
+        "password": os.getenv("USER_PASSWORD", "user123"),
+        "email": os.getenv("USER_EMAIL", "user@system.local"),
+        "role": "user",
+    },
+]
 
 
 async def create_default_admin(db: AsyncSession):
-    result = await db.execute(
-        select(UserDB).where(UserDB.username == ADMIN_USERNAME)
-    )
-    admin = result.scalar()
+    for u in DEFAULT_USERS:
+        result = await db.execute(
+            select(UserDB).where(UserDB.username == u["username"])
+        )
+        existing_user = result.scalar()
 
-    if admin:
-        return  
+        if existing_user:
+            continue
 
-    admin_user = UserDB(
-        username=ADMIN_USERNAME,
-        hashed_password=hash_password(ADMIN_PASSWORD),
-        email=ADMIN_EMAIL,
-        role="admin",
-        is_active=True
-    )
+        new_user = UserDB(
+            username=u["username"],
+            hashed_password=hash_password(u["password"]),
+            email=u["email"],
+            role=u["role"],
+            is_active=True,
+        )
 
-    db.add(admin_user)
+        db.add(new_user)
+        print(f"[INIT] User '{u['username']}' ({u['role']}) created")
+
     await db.commit()
-
-    print(f"[INIT] Admin user '{ADMIN_USERNAME}' created")

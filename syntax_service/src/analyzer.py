@@ -39,7 +39,6 @@ def analyze_syntax_with_ast(code: str):
         ast_summary["conditions"] = visitor.node_counter.get("If", 0)
 
     except SyntaxError as e:
-        # Получаем строку с ошибкой (если есть)
         lines = code.splitlines()
         context = lines[e.lineno - 1] if e.lineno and e.lineno <= len(lines) else ""
         

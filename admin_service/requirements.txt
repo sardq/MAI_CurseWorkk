@@ -4,3 +4,4 @@ pydantic
 sqlalchemy[asyncio]==2.0.25
 asyncpg==0.29.0
 passlib[bcrypt]==1.7.4
+python-jose

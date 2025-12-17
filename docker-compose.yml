@@ -23,7 +23,7 @@ services:
   knowledge_service:
     build: ./knowledge_service
     container_name: knowledge_service
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8004
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8007
     environment:
       DB_HOST: postgres_db
       DB_USER: postgres
@@ -31,7 +31,7 @@ services:
       DB_NAME: analysis_db
       DB_PORT: 5432
     ports:
-      - "8004:8004"
+      - "8007:8007"
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -63,6 +63,18 @@ services:
     command: uvicorn src.main:app --host 0.0.0.0 --port 8005
     ports:
       - "8005:8005"
+  admin_service:
+    build: ./admin_service
+    container_name: admin_service
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8004
+    environment:
+      DB_HOST: postgres_db
+      DB_USER: postgres
+      DB_PASS: postgres       
+      DB_NAME: analysis_db
+      DB_PORT: 5432
+    ports:
+      - "8004:8004"
 
   report_service:
     build: ./report_service
@@ -107,6 +119,8 @@ services:
       - "8080:80"         
     depends_on:
       - report_service
+      - ml_service
+      - admin_service
 
 volumes:
   postgres_data:
