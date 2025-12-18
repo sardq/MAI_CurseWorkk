@@ -47,7 +47,6 @@ class LogicVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def is_impossible_condition(self, node):
-        """Простейший анализ для выражений с константами"""
         if isinstance(node, ast.Compare):
             if all(isinstance(c, ast.Constant) for c in [node.left] + node.comparators):
                 left = node.left.value

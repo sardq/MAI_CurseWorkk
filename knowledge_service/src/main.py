@@ -25,7 +25,6 @@ async def startup_event():
 
 @app.post("/admin/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db_session)):
-    """Создание нового пользователя (например, администратора)"""
     hashed_password = get_password_hash(user.password)
     db_user = UserDB(
         username=user.username,
@@ -44,7 +43,6 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db_sessio
 
 @app.get("/admin/users/", response_model=List[UserResponse])
 async def list_users(db: AsyncSession = Depends(get_db_session)):
-    """Получение списка всех пользователей системы."""
     result = await db.execute(select(UserDB))
     return result.scalars().all()
 
@@ -79,8 +77,6 @@ async def lookup_knowledge(
     request: LookupRequest, 
     db: AsyncSession = Depends(get_db_session)
 ):
-    # 1. Ищем все записи для данного типа ошибки (например, "Syntax")
-    # Используем ilike для нечувствительности к регистру
     query = select(KnowledgeDB).where(KnowledgeDB.error_type.ilike(request.error_type))
     result = await db.execute(query)
     entries = result.scalars().all()
@@ -90,13 +86,10 @@ async def lookup_knowledge(
 
     best_match = None
     
-    # 2. Ищем совпадение по ключевому слову в сообщении ошибки
     for entry in entries:
-        # Если есть паттерн и он содержится в сообщении ошибки
         if entry.keyword_pattern and entry.keyword_pattern.lower() in request.error_message.lower():
             return entry
         
-        # Запоминаем "общий" совет (где паттерн пустой), на случай если точного не найдем
         if not entry.keyword_pattern or entry.keyword_pattern == "":
             best_match = entry
             
@@ -107,7 +100,6 @@ async def lookup_knowledge(
 
 @app.delete("/admin/knowledge/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_knowledge_entry(entry_id: int, db: AsyncSession = Depends(get_db_session)):
-    """Удаление записи из Базы Знаний."""
     result = await db.execute(select(KnowledgeDB).where(KnowledgeDB.id == entry_id))
     entry = result.scalars().first()
     

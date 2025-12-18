@@ -73,9 +73,6 @@ async def feedback_loop(data: FeedbackRequest):
 
 @app.post("/train/force")
 async def force_training(background_tasks: BackgroundTasks):
-    """
-    Ручка для админа: если нужно срочно применить изменения, не дожидаясь расписания.
-    """
     if IS_TRAINING:
          raise HTTPException(status_code=409, detail="Training already running")
          

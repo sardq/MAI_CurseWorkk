@@ -7858,10 +7858,10 @@ else
     x = 10 / 0
 except ZeroDivisionError:
     x = 0
-# Sample ID: 1",Fixed division by zero (ZeroDivisionError),https://github.com/example/merged,2025-01-01,"x = 10 / 0"
+# Sample ID: 1",Fixed division by zero (ZeroDivisionError),https://github.com/example/merged,2025-01-01,x = 10 / 0
 1188,"print 'Hello World'
 # Sample ID: 2","print('Hello World')
-# Sample ID: 2",Updated to Python 3 print function,https://github.com/example/merged,2025-01-01,"print 'Hello World'"
+# Sample ID: 2",Updated to Python 3 print function,https://github.com/example/merged,2025-01-01,print 'Hello World'
 1189,"lst = [1,2,3]
 print(lst[5])
 # Sample ID: 3","lst = [1,2,3]
@@ -7884,7 +7884,7 @@ print(dict.get('b'))
 print(dict['b'])"
 1192,"x = '5' + 3
 # Sample ID: 6","x = int('5') + 3
-# Sample ID: 6",Fixed type error for addition (TypeError),https://github.com/example/merged,2025-01-01,"x = '5' + 3"
+# Sample ID: 6",Fixed type error for addition (TypeError),https://github.com/example/merged,2025-01-01,x = '5' + 3
 1193,"y = 10
 if y = 5:
     print(y)
@@ -7918,7 +7918,7 @@ for i in x:
 1197,"if x > 0 or x < 10: print('ok')
 # Sample ID: 11","if 0 < x < 10:
     print('ok')
-# Sample ID: 11",Fixed logical error in condition,https://github.com/example/merged,2025-01-01,"if x > 0 or x < 10: print('ok')"
+# Sample ID: 11",Fixed logical error in condition,https://github.com/example/merged,2025-01-01,if x > 0 or x < 10: print('ok')
 1198,"my_list = []
 my_list.append(4)
 # Sample ID: 12","my_list = [4]
@@ -7929,5 +7929,6 @@ my_list.append(4)"
     x = 5 / 0
 except ZeroDivisionError:
     x = 1
-# Sample ID: 13",Fixed division by zero,https://github.com/example/merged,2025-01-01,"x = 5 / 0"
-
+# Sample ID: 13",Fixed division by zero,https://github.com/example/merged,2025-01-01,x = 5 / 0
+1200,"super_custom_function_call(x, y) without_semicolon","super_custom_function_call(x, y);",Забыта точка с запятой в кастомной функции (Тест обучения).,test_notebook,2025-01-01,"super_custom_function_call(x, y) without_semicolon"
+1201,"super_custom_function_call(x, y)","super_custom_function_call(x, y);",Забыта точка с запятой в кастомной Функции (Тест обучения).,test_notebook,2025-01-01,"super_custom_function_call(x, y)"

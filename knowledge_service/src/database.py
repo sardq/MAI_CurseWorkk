@@ -23,11 +23,9 @@ AsyncSessionLocal = sessionmaker(
 )
 
 async def init_db():
-    """Создает таблицы в БД, если они не существуют (только для разработки)"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_db_session():
-    """Dependency Injection для FastAPI: возвращает сессию и закрывает ее"""
     async with AsyncSessionLocal() as session:
         yield session

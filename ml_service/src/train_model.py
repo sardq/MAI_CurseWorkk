@@ -3,7 +3,6 @@ import pandas as pd
 import joblib
 import os
 from src.bert_utils import CodeEmbedder 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "..", "data", "code_bug_fix_pairs_merged.csv")
 DB_VECTORS_PATH = os.path.join(BASE_DIR, "db_vectors.pkl")
@@ -25,6 +24,9 @@ def train():
         return
 
     embedder = CodeEmbedder()
+    buggy_codes = df["buggy_code"].tolist()
+    fixed_codes = df["fixed_code"].tolist()
+    embedder.fine_tune(buggy_codes, fixed_codes, epochs=1, batch_size=8, lr=1e-5)
     
     vectors = embedder.get_embeddings(df["train_text"].tolist())
 

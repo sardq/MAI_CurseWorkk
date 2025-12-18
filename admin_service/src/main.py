@@ -58,7 +58,6 @@ def require_operator_or_admin(current_user: UserDB = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Operator or Admin only")
     return current_user
 
-# --- Эндпоинты управления ПОЛЬЗОВАТЕЛЯМИ (Admin) ---
 
 @app.get("/admin/users/", response_model=List[UserResponse])
 async def list_users(
@@ -133,7 +132,6 @@ async def update_knowledge_entry(
 
 @app.delete("/admin/knowledge/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_knowledge_entry(entry_id: int, db: AsyncSession = Depends(get_db_session)):
-    """Удаление записи"""
     result = await db.execute(select(KnowledgeDB).where(KnowledgeDB.id == entry_id))
     db_entry = result.scalars().first()
     

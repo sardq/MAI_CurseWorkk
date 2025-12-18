@@ -79,11 +79,6 @@ def require_admin(current_user: UserDB = Depends(get_current_user)):
 async def run_analysis_tasks(
     code: str
 ) -> Tuple[List[AnalysisResultFromService], Optional[Dict]]:
-    """
-    Запускает Syntax, Logic и Style анализ параллельно.
-    Дополнительно извлекает AST summary из Syntax Service.
-    """
-
     payload = {"code": code}
     all_errors: List[AnalysisResultFromService] = []
     ast_summary: Optional[Dict] = None
@@ -294,9 +289,6 @@ async def get_session_details(
     session_id: int,
     db: AsyncSession = Depends(get_db_session)
 ):
-    """
-    Возвращает подробный отчёт по конкретной сессии анализа.
-    """
     result = await db.execute(
         select(AnalysisSessionDB)
         .where(AnalysisSessionDB.id == session_id)

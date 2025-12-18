@@ -17,7 +17,6 @@ class KnowledgeDB(Base):
     severity_level = Column(String(50), nullable=False)
 
 class KnowledgeBaseEntryCreate(BaseModel):
-    """Модель для создания новой записи через API"""
     pattern: str
     description: str
     correction: str
@@ -26,13 +25,11 @@ class KnowledgeBaseEntryCreate(BaseModel):
     source_service: Optional[str] = None
 
 class LookupResult(BaseModel):
-    """Модель ответа при поиске рекомендации"""
     correction: str
     description: str
     severity_level: str
 
 class KnowledgeBaseEntryResponse(KnowledgeBaseEntryCreate):
-    """Полная модель ответа с ID и временем создания"""
     id: int
     created_at: str 
     
@@ -89,6 +86,6 @@ class UserDB(Base):
     username = Column(String(50), unique=True, nullable=False)
     hashed_password = Column(String(100), nullable=False)
     email = Column(String(100), unique=True)
-    role = Column(String(20), default="user") # 'admin', 'moderator', 'user'
+    role = Column(String(20), default="user")  
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, default=func.now())

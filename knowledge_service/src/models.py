@@ -12,7 +12,7 @@ class UserDB(Base):
     username = Column(String(50), unique=True, nullable=False)
     hashed_password = Column(String(100), nullable=False)
     email = Column(String(100), unique=True)
-    role = Column(String(20), default="user") # 'admin', 'moderator', 'user'
+    role = Column(String(20), default="user") 
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, default=func.now())
 
@@ -25,18 +25,16 @@ class KnowledgeDB(Base):
     
     description = Column(Text, nullable=False)
     correction = Column(Text, nullable=False)
-    severity_level = Column(String(50), nullable=False) # Critical, Warning, Info
+    severity_level = Column(String(50), nullable=False) 
 
 
 class UserCreate(BaseModel):
-    """Входная модель для регистрации и создания пользователей"""
     username: str
     password: str
     email: Optional[str] = None
     role: str = "user"
 
 class UserResponse(BaseModel):
-    """Модель для вывода данных пользователя (без пароля)"""
     id: int
     username: str
     email: Optional[str]
@@ -47,7 +45,6 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 class KnowledgeEntryUpdate(BaseModel):
-    """Модель для обновления записи в Базе Знаний"""
     description: Optional[str] = None
     correction: Optional[str] = None
     severity_level: Optional[str] = None
